@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChoDoCu.API/ChoDoCu.API.csproj" />
+    <Project Path="src/ChoDoCu.Application/ChoDoCu.Application.csproj" />
+    <Project Path="src/ChoDoCu.Domain/ChoDoCu.Domain.csproj" />
+    <Project Path="src/ChoDoCu.Infrastructure/ChoDoCu.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChoDoCu.IntegrationTests/ChoDoCu.IntegrationTests.csproj" />
+    <Project Path="tests/ChoDoCu.UnitTests/ChoDoCu.UnitTests.csproj" />
+  </Folder>
+</Solution>
