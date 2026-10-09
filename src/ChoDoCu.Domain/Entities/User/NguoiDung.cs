@@ -1,22 +1,22 @@
-using ChoDoCu.Domain.Common;
 using ChoDoCu.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace ChoDoCu.Domain.Entities;
 
-public class NguoiDung : BaseEntity   // Id  <->  cột idNguoiDung
+/// <summary>
+/// Người dùng hệ thống. Kế thừa IdentityUser&lt;int&gt; để tích hợp ASP.NET Core Identity.
+/// Identity cung cấp sẵn: Id, UserName, NormalizedUserName, Email, NormalizedEmail,
+/// PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, LockoutEnd...
+/// </summary>
+public class NguoiDung : IdentityUser<int>
 {
     public string? AnhNguoiDung { get; set; }
-    public string? UserName { get; set; }
-
-    /// <summary>Mã băm BCrypt của mật khẩu (cột passWord). Tuyệt đối không lưu mật khẩu thô.</summary>
-    public string? PasswordHash { get; set; }
 
     public int? IdThanhPho { get; set; }
     public int? IdPhuongXa { get; set; }
 
     public string HoTen { get; set; } = string.Empty;
     public string SoDienThoai { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
     public DateTime NgaySinh { get; set; }
     public string GioiTinh { get; set; } = string.Empty;
 

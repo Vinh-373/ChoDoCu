@@ -1,8 +1,9 @@
+
 using ChoDoCu.Domain.Common;
 
 namespace ChoDoCu.Domain.Entities;
 
-public class HoiThoai : BaseEntity   // Id <-> idHoiThoai
+public class HoiThoai : BaseEntity // Id <-> idHoiThoai
 {
     public int IdNguoiDung1 { get; set; }
     public int IdNguoiDung2 { get; set; }

@@ -1,9 +1,10 @@
-using ChoDoCu.Domain.Common;
 
+using ChoDoCu.Domain.Common;
 namespace ChoDoCu.Domain.Entities;
 
-public class DanhMuc : BaseEntity   // Id  <->  cột idDanhMuc
+public class DanhMuc : BaseEntity // Id  <->  cột idDanhMuc
 {
+
     public int? IdDanhMucCha { get; set; }   // null = danh mục gốc
     public string TenDanhMuc { get; set; } = string.Empty;
     public string? AnhDanhMuc { get; set; }

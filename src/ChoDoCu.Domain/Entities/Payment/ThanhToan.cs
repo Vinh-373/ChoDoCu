@@ -1,9 +1,9 @@
-using ChoDoCu.Domain.Common;
 using ChoDoCu.Domain.Enums;
+using ChoDoCu.Domain.Common;
 
 namespace ChoDoCu.Domain.Entities;
 
-public class ThanhToan : BaseEntity   // Id <-> idThanhToan
+public class ThanhToan : BaseEntity  // Id <-> idThanhToan
 {
     public int IdMuaDichVu { get; set; }
     public int IdPhuongThucTT { get; set; }

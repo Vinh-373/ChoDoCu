@@ -52,9 +52,9 @@ public static class DbSeeder
                 new PhuongThucThanhToan { TenPhuongThuc = "Chuyển khoản" });
         }
 
-        if (!await context.NguoiDungs.AnyAsync(x => x.Role == VaiTro.Admin))
+        if (!await context.Users.AnyAsync(x => x.Role == VaiTro.Admin))
         {
-            context.NguoiDungs.Add(new NguoiDung
+            context.Users.Add(new NguoiDung
             {
                 HoTen = "Quản trị viên",
                 Email = "admin@chodocu.local",

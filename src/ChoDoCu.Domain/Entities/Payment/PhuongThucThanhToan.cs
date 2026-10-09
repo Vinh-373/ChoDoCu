@@ -1,8 +1,9 @@
+
 using ChoDoCu.Domain.Common;
 
 namespace ChoDoCu.Domain.Entities;
 
-public class PhuongThucThanhToan : BaseEntity   // Id <-> idPhuongThucTT
+public class PhuongThucThanhToan : BaseEntity  // Id <-> idPhuongThucTT
 {
     public string TenPhuongThuc { get; set; } = string.Empty;
     public string? MoTa { get; set; }

@@ -1,8 +1,8 @@
-using ChoDoCu.Domain.Common;
 
+using ChoDoCu.Domain.Common;
 namespace ChoDoCu.Domain.Entities;
 
-public class PhuongXa : BaseEntity   // Id  <->  cột idPhuongXa
+public class PhuongXa : BaseEntity // Id  <->  cột idPhuongXa
 {
     public int IdThanhPho { get; set; }
     public string TenPhuongXa { get; set; } = string.Empty;
