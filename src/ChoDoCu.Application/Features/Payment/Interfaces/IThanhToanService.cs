@@ -2,14 +2,15 @@ using ChoDoCu.Application.Features.Payment.DTOs;
 
 namespace ChoDoCu.Application.Features.Payment.Interfaces;
 
+// Các thao tác thanh toán được controller gọi; xử lý nghiệp vụ và lưu DB nằm trong service.
 public interface IThanhToanService
 {
     /// <summary>Tạo đơn mua dịch vụ + phiếu thanh toán ở trạng thái ChờXửLý.</summary>
-    Task<MuaDichVuResponse> MuaDichVuAsync(int idNguoiDung, MuaDichVuRequest request);
+    Task<MuaDichVuResponse> MuaDichVuAsync(int idNguoiDung, MuaDichVuRequest request, string ipAddress);
 
-    /// <summary>
-    /// Xác nhận kết quả thanh toán. Trong đồ án thật, hàm này được gọi bởi webhook của cổng thanh toán
-    /// (VNPay/Momo), không phải do người dùng gọi trực tiếp.
-    /// </summary>
-    Task XacNhanAsync(XacNhanThanhToanRequest request);
+    Task<List<LichSuMuaDichVuResponse>> LichSuMuaDichVuAsync(int idNguoiDung);
+
+    Task<ThanhToanTrangThaiResponse> TrangThaiAsync(int idNguoiDung, int idThanhToan);
+
+    Task XuLyCallbackAsync(string tenNhaCungCap, IReadOnlyDictionary<string, string> thamSo);
 }

@@ -14,4 +14,9 @@ public class DichVuRepository : Repository<DichVu>, IDichVuRepository
             .Where(x => x.TrangThai == "HoatDong")
             .OrderBy(x => x.Gia)
             .ToListAsync();
+
+    public async Task<IReadOnlyList<DichVu>> DanhSachQuanTriAsync() =>
+        await _dbSet.AsNoTracking()
+            .OrderBy(x => x.Gia)
+            .ToListAsync();
 }

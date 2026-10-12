@@ -484,3 +484,7 @@ $RECYCLE.BIN/
 
 **/Migrations/
 /Migrations/
+
+/Properties/
+!src/ChoDoCu.Infrastructure/Migrations/
+!src/ChoDoCu.Infrastructure/Migrations/*.cs

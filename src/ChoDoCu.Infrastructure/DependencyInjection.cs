@@ -4,6 +4,8 @@ using ChoDoCu.Domain.Interfaces;
 using ChoDoCu.Infrastructure.Data;
 using ChoDoCu.Infrastructure.Repositories;
 using ChoDoCu.Infrastructure.Services;
+using ChoDoCu.Infrastructure.Services.Payments;
+using ChoDoCu.Application.Features.Payment.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,14 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        // Đọc thông tin merchant/URL/khóa bí mật từ hai nhánh cấu hình thanh toán.
+        services.Configure<MoMoSettings>(configuration.GetSection("Payment:MoMo"));
+        services.Configure<VnPaySettings>(configuration.GetSection("Payment:VnPay"));
+
+        // MoMo cần HttpClient để gọi API tạo yêu cầu; cả hai gateway cùng được cung cấp qua interface.
+        services.AddHttpClient<MoMoGateway>();
+        services.AddTransient<IPaymentGateway>(provider => provider.GetRequiredService<MoMoGateway>());
+        services.AddTransient<IPaymentGateway, VnPayGateway>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IJwtService, JwtService>();
