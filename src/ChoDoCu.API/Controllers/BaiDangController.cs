@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using System.Security.Claims;
 using ChoDoCu.Application.Features.Post.DTOs;
 using ChoDoCu.Application.Features.Post.Interfaces;
@@ -37,10 +39,10 @@ public class BaiDangController : ControllerBase
     public async Task<IActionResult> GetChiTiet(int id)
     {
         int? idNguoiXem = User.Identity?.IsAuthenticated == true ? GetUserId() : null;
-        return Ok(await _baiDangService.GetChiTietAsync(id, idNguoiXem, User.IsInRole("Admin")));
+        return Ok(await _baiDangService.GetChiTietAsync(id, idNguoiXem, User.HasClaim(AppPermissions.ClaimType, AppPermissions.BaiDangDuyet)));
     }
 
-    [Authorize]
+    [HasPermission(AppPermissions.BaiDangTao)]
     [HttpPost]
     public async Task<IActionResult> Tao(TaoBaiDangRequest request)
     {
@@ -48,7 +50,7 @@ public class BaiDangController : ControllerBase
         return CreatedAtAction(nameof(GetChiTiet), new { id = ketQua.Id }, ketQua);
     }
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BaiDangDuyet)]
     [HttpPut("{id:int}/duyet")]
     public async Task<IActionResult> Duyet(int id)
     {
@@ -56,7 +58,7 @@ public class BaiDangController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BaiDangDuyet)]
     [HttpPut("{id:int}/tu-choi")]
     public async Task<IActionResult> TuChoi(int id)
     {

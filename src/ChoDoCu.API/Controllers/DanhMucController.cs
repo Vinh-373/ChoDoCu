@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using ChoDoCu.Application.Features.Category.DTOs;
 using ChoDoCu.Application.Features.Category.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,16 +17,16 @@ public class DanhMucController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetCay() => Ok(await _service.GetCayDanhMucAsync());
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpPost]
     public async Task<IActionResult> Tao(TaoDanhMucRequest request) => Ok(await _service.TaoAsync(request));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> CapNhat(int id, CapNhatDanhMucRequest request)
         => Ok(await _service.CapNhatAsync(id, request));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Xoa(int id)
     {

@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using ChoDoCu.Application.Features.Banner.DTOs;
 using ChoDoCu.Application.Features.Banner.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +17,11 @@ public class BannerController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> DanhSach([FromQuery] string? viTri) => Ok(await _service.DanhSachAsync(viTri));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BannerQuanLy)]
     [HttpPost]
     public async Task<IActionResult> Tao(TaoBannerRequest request) => Ok(await _service.TaoAsync(request));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BannerQuanLy)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Xoa(int id)
     {

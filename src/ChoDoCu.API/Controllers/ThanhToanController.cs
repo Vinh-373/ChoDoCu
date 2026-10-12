@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using System.Security.Claims;
 using ChoDoCu.Application.Features.Payment.DTOs;
 using ChoDoCu.Application.Features.Payment.Interfaces;
@@ -20,7 +22,7 @@ public class ThanhToanController : ControllerBase
 
     // Tạm thời chỉ Admin được xác nhận. Khi tích hợp VNPay/Momo, đổi thành webhook
     // xác thực bằng chữ ký callback của cổng thanh toán.
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.ThanhToanXacNhan)]
     [HttpPost("xac-nhan")]
     public async Task<IActionResult> XacNhan(XacNhanThanhToanRequest request)
     {

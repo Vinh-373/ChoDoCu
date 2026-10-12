@@ -19,8 +19,6 @@ public class NguoiDung : IdentityUser<int>
     public string SoDienThoai { get; set; } = string.Empty;
     public DateTime NgaySinh { get; set; }
     public string GioiTinh { get; set; } = string.Empty;
-
-    public VaiTro Role { get; set; } = VaiTro.User;
     public int LuotDang { get; set; }
     public int LuotDay { get; set; }
     public DateTime NgayTao { get; set; } = DateTime.Now;

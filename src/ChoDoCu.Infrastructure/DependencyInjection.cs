@@ -18,12 +18,26 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        // Dòng đăng ký cũ (hiện giữ lại dưới dạng comment):
-        // services.AddScoped<IPasswordHasher, PasswordHasher>();
-        // Cấu hình hiện tại dùng ASP.NET Core Identity với khóa int.
-        services.AddIdentityCore<NguoiDung>()
-            .AddRoles<Role>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+        // ===== ASP.NET Core Identity =====
+        services.AddIdentityCore<NguoiDung>(options =>
+            {
+                // Mật khẩu (phải khớp DangKyRequestValidator bên Application)
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+
+                // Khóa tạm tài khoản khi đăng nhập sai liên tiếp (AuthService gọi AccessFailedAsync)
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddRoles<IdentityRole<int>>()                  // bảng AspNetRoles; quyền lưu ở AspNetRoleClaims
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();                  // Cần cho quên mật khẩu, xác thực email...
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
