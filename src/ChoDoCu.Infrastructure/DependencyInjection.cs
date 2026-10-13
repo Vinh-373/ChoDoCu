@@ -40,9 +40,15 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();                  // Cần cho quên mật khẩu, xác thực email...
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<EmailSettings>(configuration.GetSection("Email"));
+
+// Liên kết đặt lại mật khẩu hết hạn sau Email:ResetTokenHours giờ (mặc định 1)
+var tokenHours = configuration.GetValue<int?>("Email:ResetTokenHours") ?? 1;
+services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(tokenHours));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
         // Thêm IFileStorage, IEmailService... ở đây
 
         return services;

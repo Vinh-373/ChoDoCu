@@ -10,6 +10,13 @@ public record DangKyRequest(
 
 public record DangNhapRequest(string Email, string MatKhau);
 
+public record DoiMatKhauRequest(string MatKhauCu, string MatKhauMoi);
+
+public record QuenMatKhauRequest(string Email);
+
+/// <param name="Token">Token trong liên kết email (client gửi nguyên giá trị đã giải mã URL).</param>
+public record DatLaiMatKhauRequest(string Email, string Token, string MatKhauMoi);
+
 /// <param name="Role">Role chính (đầu tiên) — giữ lại để tương thích client cũ.</param>
 /// <param name="Roles">Mọi Role của người dùng.</param>
 /// <param name="Permissions">Mọi mã quyền chi tiết của người dùng, để client ẩn/hiện chức năng.</param>
