@@ -2,7 +2,6 @@ using ChoDoCu.API.Extensions;
 using ChoDoCu.API.Middlewares;
 using ChoDoCu.Application;
 using ChoDoCu.Infrastructure;
-using ChoDoCu.Infrastructure.Data;
 using ChoDoCu.Infrastructure.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,16 +12,15 @@ builder.Services.AddInfrastructure(builder.Configuration);  // Infrastructure la
 builder.Services.AddControllers();
 builder.Services.AddSwaggerWithJwt();
 builder.Services.AddJwtAuth(builder.Configuration);
+builder.Services.AddPermissionAuthorization();              // [HasPermission(...)] dựa trên claim "permission"
 builder.Services.AddCorsPolicy();
 
 var app = builder.Build();
 
-// ===== Migrate + seed dữ liệu mẫu khi chạy môi trường Development =====
+// ===== Migrate + seed khi chạy môi trường Development =====
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedAsync(db);
+    await DbSeeder.SeedAsync(app.Services);                 // migrate + Role + quyền (AspNetRoleClaims) + Admin + dữ liệu mẫu
 }
 
 // ===== Pipeline (thứ tự quan trọng) =====

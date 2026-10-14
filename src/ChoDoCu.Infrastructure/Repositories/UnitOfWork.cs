@@ -27,8 +27,6 @@ public class UnitOfWork : IUnitOfWork
         ThanhToans = new ThanhToanRepository(context);
         LichSuTimKiems = new LichSuTimKiemRepository(context);
         Banners = new BannerRepository(context);
-        ChucNangs = new ChucNangRepository(context);
-        RoleChucNangs = new RoleChucNangRepository(context);    
     }
 
     public IBaiDangRepository BaiDangs { get; }
@@ -47,8 +45,6 @@ public class UnitOfWork : IUnitOfWork
     public IThanhToanRepository ThanhToans { get; }
     public ILichSuTimKiemRepository LichSuTimKiems { get; }
     public IBannerRepository Banners { get; }
-    public IChucNangRepository ChucNangs { get; }
-    public IRoleChucNangRepository RoleChucNangs { get; }
 
     public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
 }

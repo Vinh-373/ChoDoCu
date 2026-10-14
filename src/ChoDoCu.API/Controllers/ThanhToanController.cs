@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -31,18 +33,18 @@ public class ThanhToanController : ControllerBase
     }
 
     // Các route dành cho người dùng đăng nhập; service lấy danh tính từ claim, không nhận userId từ client.
-    [Authorize(Roles = "User")]
+    [Authorize]
     [HttpPost("mua-dich-vu")]
     public async Task<IActionResult> MuaDichVu(MuaDichVuRequest request)
         => Ok(await _service.MuaDichVuAsync(
             GetUserId(), request, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"));
 
-    [Authorize(Roles = "User")]
+    [Authorize]
     [HttpGet("lich-su-mua-dich-vu")]
     public async Task<IActionResult> LichSuMuaDichVu()
         => Ok(await _service.LichSuMuaDichVuAsync(GetUserId()));
 
-    [Authorize(Roles = "User")]
+    [Authorize]
     [HttpGet("{idThanhToan:int}/trang-thai")]
     public async Task<IActionResult> TrangThai(int idThanhToan)
         => Ok(await _service.TrangThaiAsync(GetUserId(), idThanhToan));

@@ -1,15 +1,16 @@
 using ChoDoCu.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
 
 namespace ChoDoCu.Infrastructure.Data;
 
-public class ApplicationDbContext : IdentityDbContext<NguoiDung, Role, int>
+public class ApplicationDbContext : IdentityDbContext<NguoiDung, IdentityRole<int>, int>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
 
-    //public DbSet<NguoiDung> NguoiDungs => Set<NguoiDung>();
-    //public DbSet<Role> Roles => Set<Role>();
     public DbSet<DanhMuc> DanhMucs => Set<DanhMuc>();
     public DbSet<SanPham> SanPhams => Set<SanPham>();
     public DbSet<AnhSanPham> AnhSanPhams => Set<AnhSanPham>();
@@ -32,23 +33,18 @@ public class ApplicationDbContext : IdentityDbContext<NguoiDung, Role, int>
     public DbSet<DongSanPham> DongSanPhams => Set<DongSanPham>();
     public DbSet<DongCuThe> DongCuThes => Set<DongCuThe>();
     public DbSet<PhuongThucThanhToan> PhuongThucThanhToans => Set<PhuongThucThanhToan>();
-    public DbSet<ChucNang> ChucNangs => Set<ChucNang>();
-    public DbSet<RoleChucNang> RoleChucNangs => Set<RoleChucNang>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Đặt tên bảng cho các entity kế thừa IdentityUser và IdentityRole
-        modelBuilder.Entity<NguoiDung>().ToTable("NguoiDungs");
-        modelBuilder.Entity<Role>().ToTable("Roles");
         // Quy ước: thuộc tính PascalCase -> cột camelCase (TieuDe -> tieuDe).
-        // Chạy TRƯỚC khi áp Configuration để Configuration có thể ghi đè khi cần (Id, PasswordHash...).
+        // Chạy TRƯỚC khi áp Configuration để Configuration có thể ghi đè khi cần.
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
             foreach (var property in entity.GetProperties())
                 property.SetColumnName(ToCamelCase(property.Name));
 
-        // Nạp mọi lớp IEntityTypeConfiguration<T> trong thư mục Configurations
+        // Nạp mọi lớp IEntityTypeConfiguration<T> trong assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 

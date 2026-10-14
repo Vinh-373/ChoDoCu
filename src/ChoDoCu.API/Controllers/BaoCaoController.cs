@@ -1,3 +1,5 @@
+using ChoDoCu.Domain.Constants;
+using ChoDoCu.API.Authorization;
 using System.Security.Claims;
 using ChoDoCu.Application.Features.Report.DTOs;
 using ChoDoCu.Application.Features.Report.Interfaces;
@@ -18,13 +20,13 @@ public class BaoCaoController : ControllerBase
     public async Task<IActionResult> Tao(TaoBaoCaoRequest request)
         => Ok(await _service.TaoAsync(GetUserId(), request));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BaoCaoXuLy)]
     [HttpGet]
     public async Task<IActionResult> DanhSach(
         [FromQuery] string? trangThai, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         => Ok(await _service.DanhSachAsync(trangThai, page, pageSize));
 
-    [Authorize(Roles = "Admin")]
+    [HasPermission(AppPermissions.BaoCaoXuLy)]
     [HttpPut("{id:int}/xu-ly")]
     public async Task<IActionResult> XuLy(int id, [FromQuery] string trangThaiMoi)
     {
