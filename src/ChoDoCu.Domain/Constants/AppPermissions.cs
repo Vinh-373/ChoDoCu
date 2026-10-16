@@ -16,13 +16,20 @@ public static class AppPermissions
 
     public const string DanhMucQuanLy = "DanhMuc.QuanLy";
     public const string BannerQuanLy = "Banner.QuanLy";
-    public const string DichVuQuanLy = "DichVu.QuanLy";
+    //public const string DichVuQuanLy = "DichVu.QuanLy";
     public const string BaoCaoXuLy = "BaoCao.XuLy";
 
     public const string NguoiDungXem = "NguoiDung.Xem";
     public const string NguoiDungKhoa = "NguoiDung.Khoa";
     public const string PhanQuyenQuanLy = "PhanQuyen.QuanLy";
     public const string ThanhToanXacNhan = "ThanhToan.XacNhan";
+
+    /// Quyền liên quan đến dịch vụ (gói dịch vụ)
+    public const string DichVuXem = "DichVu.Xem";
+    public const string DichVuThem = "DichVu.Them";
+    public const string DichVuSua = "DichVu.Sua";
+    public const string DichVuXoa = "DichVu.Xoa";
+
 
     /// <summary>(Mã quyền, tên hiển thị) — nguồn dữ liệu seed cho bảng ChucNang.</summary>
     public static readonly IReadOnlyList<(string Ma, string Ten)> All = new List<(string, string)>
@@ -32,7 +39,12 @@ public static class AppPermissions
         (BaiDangXoaBatKy, "Xóa bài đăng của bất kỳ ai"),
         (DanhMucQuanLy, "Quản lý danh mục"),
         (BannerQuanLy, "Quản lý banner"),
-        (DichVuQuanLy, "Quản lý dịch vụ"),
+
+        (DichVuXem, "Xem dịch vụ"),
+        (DichVuThem, "Thêm dịch vụ"),
+        (DichVuSua, "Sửa dịch vụ"),
+        (DichVuXoa, "Xóa dịch vụ"),
+
         (BaoCaoXuLy, "Xử lý báo cáo vi phạm"),
         (NguoiDungXem, "Xem danh sách người dùng"),
         (NguoiDungKhoa, "Khóa / mở khóa người dùng"),

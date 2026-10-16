@@ -11,4 +11,13 @@ public class MuaDichVuRepository : Repository<MuaDichVu>, IMuaDichVuRepository
 
     public Task<MuaDichVu?> GetKemDichVuAsync(int id) =>
         _dbSet.Include(x => x.DichVu).FirstOrDefaultAsync(x => x.Id == id);
+
+    public async Task<IReadOnlyList<MuaDichVu>> LichSuTheoNguoiDungAsync(int idNguoiDung) =>
+        await _dbSet
+            .AsNoTracking()
+            .Where(x => x.IdNguoiDung == idNguoiDung)
+            .Include(x => x.DichVu)
+            .Include(x => x.ThanhToans)
+            .OrderByDescending(x => x.NgayMua)
+            .ToListAsync();
 }

@@ -1,6 +1,7 @@
 using ChoDoCu.Application.Common.Models;
 using ChoDoCu.Application.Features.Favorite.DTOs;
 using ChoDoCu.Application.Features.Favorite.Interfaces;
+using ChoDoCu.Application.Features.Notification.Interfaces;
 using ChoDoCu.Domain.Entities;
 using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
@@ -10,14 +11,26 @@ namespace ChoDoCu.Application.Features.Favorite.Services;
 public class YeuThichService : IYeuThichService
 {
     private readonly IUnitOfWork _uow;
-    public YeuThichService(IUnitOfWork uow) => _uow = uow;
+    private readonly IThongBaoService _thongBaoService;
+
+    public YeuThichService(
+        IUnitOfWork uow,
+        IThongBaoService thongBaoService)
+    {
+        _uow = uow;
+        _thongBaoService = thongBaoService;
+    }
+
 
     public async Task<bool> ToggleAsync(int idNguoiDung, int idBaiDang)
     {
         var baiDang = await _uow.BaiDangs.GetByIdAsync(idBaiDang)
             ?? throw new NotFoundException(nameof(BaiDang), idBaiDang);
 
-        var daThich = await _uow.YeuThichs.TimAsync(idNguoiDung, idBaiDang);
+        var daThich = await _uow.YeuThichs.TimAsync(
+            idNguoiDung, idBaiDang);
+
+        // Đã thích rồi thì lần bấm này là bỏ thích.
         if (daThich is not null)
         {
             _uow.YeuThichs.Remove(daThich);
@@ -25,10 +38,28 @@ public class YeuThichService : IYeuThichService
             return false;
         }
 
-        await _uow.YeuThichs.AddAsync(new YeuThich { IdNguoiDung = idNguoiDung, IdBaiDang = idBaiDang });
+        // Thêm lượt thích mới.
+        await _uow.YeuThichs.AddAsync(new YeuThich
+        {
+            IdNguoiDung = idNguoiDung,
+            IdBaiDang = idBaiDang
+        });
+
         await _uow.SaveChangesAsync();
+
+        // Chỉ thông báo khi người khác thích bài đăng.
+        // Cần lấy đúng ID chủ bài đăng từ entity BaiDang.
+        if (baiDang.IdNguoiDung != idNguoiDung)
+        {
+            await _thongBaoService.TaoAsync(
+                baiDang.IdNguoiDung,
+                "Bài đăng của bạn có lượt thích mới",
+                $"Bài đăng \"{baiDang.TieuDe}\" vừa được một người dùng yêu thích.");
+        }
+
         return true;
     }
+
 
     public async Task<PagedResult<YeuThichResponse>> DanhSachAsync(int idNguoiDung, int page, int pageSize)
     {

@@ -7,6 +7,13 @@ public class TaoBaiDangRequestValidator : AbstractValidator<TaoBaiDangRequest>
 {
     public TaoBaiDangRequestValidator()
     {
+        
+
+RuleFor(x => x.IdHang).GreaterThan(0);
+RuleFor(x => x.IdDongSanPham).GreaterThan(0);
+RuleFor(x => x.IdDongCuThe).GreaterThan(0);
+
+
         RuleFor(x => x.TieuDe).NotEmpty().MaximumLength(255);
         RuleFor(x => x.NoiDung).NotEmpty();
         RuleFor(x => x.TenSanPham).NotEmpty().MaximumLength(255);

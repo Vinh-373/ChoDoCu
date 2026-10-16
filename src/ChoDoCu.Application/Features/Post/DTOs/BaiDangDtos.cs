@@ -1,3 +1,4 @@
+
 namespace ChoDoCu.Application.Features.Post.DTOs;
 
 public record TaoBaiDangRequest(
@@ -11,7 +12,11 @@ public record TaoBaiDangRequest(
     int? IdPhuongXa,
     string DiaChi,
     string DiaChiChiTiet,
-    List<string> UrlAnhs);
+    int IdHang,
+    int IdDongSanPham,
+    int IdDongCuThe,
+    List<string> UrlAnhs
+);
 
 public record BaiDangResponse(
     int Id,
@@ -27,4 +32,5 @@ public record BaiDangResponse(
     string TenNguoiDang,
     string TenDanhMuc,
     string TenThanhPho,
-    List<string> Anhs);
+    List<string> Anhs
+);

@@ -25,4 +25,25 @@ public class ThongBaoRepository : Repository<ThongBao>, IThongBaoRepository
 
     public Task<int> DemChuaDocAsync(int idNguoiDung) =>
         _dbSet.CountAsync(x => x.IdNguoiDung == idNguoiDung && x.TrangThai == "ChuaDoc");
+
+
+
+
+
+
+
+    public async Task DanhDauTatCaDaDocAsync(int idNguoiDung)
+    {
+        var thongBaos = await _dbSet
+            .Where(x => x.IdNguoiDung == idNguoiDung
+                        && x.TrangThai == "ChuaDoc")
+            .ToListAsync();
+
+        foreach (var thongBao in thongBaos)
+        {
+            thongBao.DanhDauDaDoc();
+        }
+    }
+
+
 }

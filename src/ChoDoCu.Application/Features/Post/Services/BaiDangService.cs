@@ -7,6 +7,8 @@ using ChoDoCu.Domain.Enums;
 using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
 using FluentValidation;
+using ChoDoCu.Application.Common.Interfaces;
+using ChoDoCu.Application.Features.Notification.DTOs;
 
 namespace ChoDoCu.Application.Features.Post.Services;
 
@@ -14,11 +16,16 @@ public class BaiDangService : IBaiDangService
 {
     private readonly IUnitOfWork _uow;
     private readonly IValidator<TaoBaiDangRequest> _validator;
-
-    public BaiDangService(IUnitOfWork uow, IValidator<TaoBaiDangRequest> validator)
+    private readonly IThongBaoNotifier _thongBaoNotifier;
+ 
+    public BaiDangService(
+        IUnitOfWork uow,
+        IValidator<TaoBaiDangRequest> validator,
+        IThongBaoNotifier thongBaoNotifier)
     {
         _uow = uow;
         _validator = validator;
+        _thongBaoNotifier = thongBaoNotifier;
     }
 
     public async Task<BaiDangResponse> TaoAsync(int idNguoiDung, TaoBaiDangRequest request)
@@ -46,6 +53,9 @@ public class BaiDangService : IBaiDangService
         var sanPham = new SanPham
         {
             IdDanhMuc = request.IdDanhMuc,
+            IdHang = request.IdHang,
+            IdDongSanPham = request.IdDongSanPham,
+            IdDongCuThe = request.IdDongCuThe,
             TenSanPham = request.TenSanPham.Trim(),
             GiaTien = request.GiaTien,
             MoTa = request.MoTa
@@ -96,29 +106,73 @@ public class BaiDangService : IBaiDangService
         return new PagedResult<BaiDangResponse>(items.Select(x => x.ToResponse()).ToList(), total, page, pageSize);
     }
 
-    public async Task DuyetAsync(int id)
-    {
-        var baiDang = await _uow.BaiDangs.GetByIdAsync(id) ?? throw new NotFoundException(nameof(BaiDang), id);
-        baiDang.Duyet();
-        await _uow.ThongBaos.AddAsync(new ThongBao
-        {
-            IdNguoiDung = baiDang.IdNguoiDung,
-            TieuDe = "Bài đăng đã được duyệt",
-            NoiDung = baiDang.TieuDe
-        });
-        await _uow.SaveChangesAsync();   // bài đăng + thông báo cùng 1 transaction
-    }
 
-    public async Task TuChoiAsync(int id)
+public async Task DuyetAsync(int id)
+{
+    var baiDang = await _uow.BaiDangs.GetByIdAsync(id)
+        ?? throw new NotFoundException(nameof(BaiDang), id);
+
+    baiDang.Duyet();
+
+    var thongBao = new ThongBao
     {
-        var baiDang = await _uow.BaiDangs.GetByIdAsync(id) ?? throw new NotFoundException(nameof(BaiDang), id);
-        baiDang.TuChoi();
-        await _uow.ThongBaos.AddAsync(new ThongBao
-        {
-            IdNguoiDung = baiDang.IdNguoiDung,
-            TieuDe = "Bài đăng bị từ chối",
-            NoiDung = baiDang.TieuDe
-        });
-        await _uow.SaveChangesAsync();
-    }
+        IdNguoiDung = baiDang.IdNguoiDung,
+        TieuDe = "Bài đăng đã được duyệt",
+        NoiDung = baiDang.TieuDe
+    };
+
+    await _uow.ThongBaos.AddAsync(thongBao);
+
+    // Lưu trạng thái bài đăng và thông báo vào database
+    await _uow.SaveChangesAsync();
+
+    // Gửi thông báo realtime cho chủ bài đăng
+    var response = new ThongBaoResponse(
+        thongBao.Id,
+        thongBao.TieuDe,
+        thongBao.NoiDung,
+        thongBao.NgayTao,
+        thongBao.TrangThai
+    );
+
+    await _thongBaoNotifier.GuiThongBaoMoiAsync(
+        baiDang.IdNguoiDung,
+        response
+    );
+}
+
+public async Task TuChoiAsync(int id)
+{
+    var baiDang = await _uow.BaiDangs.GetByIdAsync(id)
+        ?? throw new NotFoundException(nameof(BaiDang), id);
+
+    baiDang.TuChoi();
+
+    var thongBao = new ThongBao
+    {
+        IdNguoiDung = baiDang.IdNguoiDung,
+        TieuDe = "Bài đăng bị từ chối",
+        NoiDung = baiDang.TieuDe
+    };
+
+    await _uow.ThongBaos.AddAsync(thongBao);
+
+    // Lưu trạng thái bài đăng và thông báo vào database
+    await _uow.SaveChangesAsync();
+
+    // Gửi thông báo realtime cho chủ bài đăng
+    var response = new ThongBaoResponse(
+        thongBao.Id,
+        thongBao.TieuDe,
+        thongBao.NoiDung,
+        thongBao.NgayTao,
+        thongBao.TrangThai
+    );
+
+    await _thongBaoNotifier.GuiThongBaoMoiAsync(
+        baiDang.IdNguoiDung,
+        response
+    );
+}
+
 }

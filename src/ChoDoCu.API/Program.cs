@@ -1,30 +1,38 @@
 using ChoDoCu.API.Extensions;
 using ChoDoCu.API.Middlewares;
+using ChoDoCu.API.Hubs;
 using ChoDoCu.Application;
+using ChoDoCu.Application.Common.Interfaces;
 using ChoDoCu.Infrastructure;
 using ChoDoCu.Infrastructure.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== Đăng ký service =====
-builder.Services.AddApplication();                          // Application layer
-builder.Services.AddInfrastructure(builder.Configuration);  // Infrastructure layer (DB, JWT, ...)
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
+
 builder.Services.AddSwaggerWithJwt();
 builder.Services.AddJwtAuth(builder.Configuration);
-builder.Services.AddPermissionAuthorization();              // [HasPermission(...)] dựa trên claim "permission"
+builder.Services.AddPermissionAuthorization();
 builder.Services.AddCorsPolicy();
+
+builder.Services.AddSignalR();
+
+builder.Services.AddScoped<IThongBaoNotifier, ThongBaoNotifier>();
+builder.Services.AddScoped<IChatNotifier, ChatNotifier>();
 
 var app = builder.Build();
 
-// ===== Migrate + seed khi chạy môi trường Development =====
+// ===== Migrate + seed dữ liệu mẫu =====
 if (app.Environment.IsDevelopment())
 {
-    await DbSeeder.SeedAsync(app.Services);                 // migrate + Role + quyền (AspNetRoleClaims) + Admin + dữ liệu mẫu
+    await DbSeeder.SeedAsync(app.Services);
 }
 
-// ===== Pipeline (thứ tự quan trọng) =====
-app.UseMiddleware<ExceptionHandlingMiddleware>();           // đặt đầu tiên để bắt mọi lỗi phía sau
+// ===== Pipeline =====
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -33,13 +41,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();                                       // phục vụ ảnh trong wwwroot/uploads
+app.UseStaticFiles();
+
 app.UseCors(CorsExtensions.PolicyName);
-app.UseAuthentication();                                    // "bạn là ai"  (phải trước Authorization)
-app.UseAuthorization();                                     // "bạn được làm gì"
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
 
-// Cho phép test tích hợp (WebApplicationFactory<Program>) truy cập
 public partial class Program { }
