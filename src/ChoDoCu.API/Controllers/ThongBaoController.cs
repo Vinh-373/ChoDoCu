@@ -28,4 +28,15 @@ public class ThongBaoController : ControllerBase
     }
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+
+
+    
+    [HttpPut("da-doc-tat-ca")]
+    public async Task<IActionResult> DanhDauTatCaDaDoc()
+    {
+        await _service.DanhDauTatCaDaDocAsync(GetUserId());
+        return NoContent();
+    }
+
 }

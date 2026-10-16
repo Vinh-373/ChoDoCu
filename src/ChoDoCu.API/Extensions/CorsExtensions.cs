@@ -10,7 +10,9 @@ public static class CorsExtensions
             options.AddPolicy(PolicyName, policy => policy
                 .WithOrigins("http://localhost:3000", "http://localhost:5173")   // địa chỉ frontend
                 .AllowAnyHeader()
-                .AllowAnyMethod()));
+                .AllowAnyMethod()
+                .AllowCredentials() // Cho phép gửi cookie, header Authorization, ... từ frontend
+                 ));
         return services;
     }
 }

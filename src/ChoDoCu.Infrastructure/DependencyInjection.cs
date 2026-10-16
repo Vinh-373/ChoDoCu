@@ -29,6 +29,11 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IJwtService, JwtService>();
+
+        services.Configure<CloudinarySettings>(
+            configuration.GetSection("Cloudinary"));
+
+        services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
         // Thêm IFileStorage, IEmailService... ở đây
 
         return services;

@@ -11,4 +11,14 @@ public interface IThongBaoService
 
     /// <summary>Dùng nội bộ khi có sự kiện (bài đăng được duyệt, có tin nhắn mới...).</summary>
     Task TaoAsync(int idNguoiDung, string tieuDe, string? noiDung);
+
+
+
+
+
+
+
+    
+    Task DanhDauTatCaDaDocAsync(int idNguoiDung);
+
 }
