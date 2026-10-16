@@ -1,0 +1,13 @@
+/* Nạp SAU index.css để utility của Tailwind thắng CSS cũ khi cùng độ ưu tiên. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Icon font Material Symbols: khoá ô vuông 1em để chữ dự phòng (khi font chưa tải) không làm vỡ layout. */
+.material-symbols-outlined {
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  flex-shrink: 0;
+  user-select: none;
+}

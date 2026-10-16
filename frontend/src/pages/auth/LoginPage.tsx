@@ -1,9 +1,15 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import AuthFormHeader from "../../components/auth/AuthFormHeader";
+import { AuthField } from "../../components/auth/AuthField";
+import AuthSwitchPrompt from "../../components/auth/AuthSwitchPrompt";
+import FormAlert from "../../components/auth/FormAlert";
+import SubmitButton from "../../components/auth/SubmitButton";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { getErrorMessage } from "../../utils/error";
 
+/** Trang con của AuthLayout: khung hai cột do AuthLayout lo, ở đây chỉ có form. */
 export default function LoginPage() {
   useDocumentTitle("Đăng nhập");
   const { user, login } = useAuth();
@@ -33,28 +39,40 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-wrap">
-      <form className="panel auth-card stack" onSubmit={submit}>
-        <div>
-          <h1>Đăng nhập</h1>
-          <p className="muted">Để đăng tin, lưu tin yêu thích và nhắn cho người bán.</p>
-        </div>
-        {error && <div className="alert" role="alert">{error}</div>}
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="field">
-          <label htmlFor="mk">Mật khẩu</label>
-          <input id="mk" type="password" autoComplete="current-password" required value={matKhau} onChange={(e) => setMatKhau(e.target.value)} />
-        </div>
-        <button className="btn btn-block" disabled={busy}>
-          {busy ? "Đang đăng nhập…" : "Đăng nhập"}
-        </button>
-        <p className="muted">
-          Chưa có tài khoản? <Link to="/dang-ky">Đăng ký</Link>
-        </p>
+    <>
+      <AuthFormHeader
+        icon="lock_open"
+        eyebrow="Cổng đăng nhập an toàn"
+        title="Chào mừng trở lại!"
+        subtitle="Đăng nhập để tiếp tục quản lý tin và giao dịch mua bán"
+      />
+      <form className="flex flex-col gap-space-lg" onSubmit={submit}>
+        {error && <FormAlert message={error} />}
+        <AuthField
+          id="email"
+          label="Email"
+          icon="mail"
+          type="email"
+          autoComplete="email"
+          placeholder="Nhập email của bạn"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <AuthField
+          id="matKhau"
+          label="Mật khẩu"
+          icon="lock"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Nhập mật khẩu của bạn"
+          required
+          value={matKhau}
+          onChange={(e) => setMatKhau(e.target.value)}
+        />
+        <SubmitButton busy={busy} label="Đăng nhập" busyLabel="Đang đăng nhập…" />
       </form>
-    </div>
+      <AuthSwitchPrompt text="Chưa có tài khoản?" linkText="Đăng ký ngay" to="/dang-ky" />
+    </>
   );
 }
