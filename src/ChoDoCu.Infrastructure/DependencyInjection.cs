@@ -4,6 +4,8 @@ using ChoDoCu.Domain.Interfaces;
 using ChoDoCu.Infrastructure.Data;
 using ChoDoCu.Infrastructure.Repositories;
 using ChoDoCu.Infrastructure.Services;
+using ChoDoCu.Infrastructure.Services.Payments;
+using ChoDoCu.Application.Features.Payment.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,14 +20,41 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        // Dòng đăng ký cũ (hiện giữ lại dưới dạng comment):
-        // services.AddScoped<IPasswordHasher, PasswordHasher>();
-        // Cấu hình hiện tại dùng ASP.NET Core Identity với khóa int.
-        services.AddIdentityCore<NguoiDung>()
-            .AddRoles<Role>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+        // ===== ASP.NET Core Identity =====
+        services.AddIdentityCore<NguoiDung>(options =>
+            {
+                // Mật khẩu (phải khớp DangKyRequestValidator bên Application)
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+
+                // Khóa tạm tài khoản khi đăng nhập sai liên tiếp (AuthService gọi AccessFailedAsync)
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddRoles<IdentityRole<int>>()                  // bảng AspNetRoles; quyền lưu ở AspNetRoleClaims
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();                  // Cần cho quên mật khẩu, xác thực email...
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        // Đọc thông tin merchant/URL/khóa bí mật từ hai nhánh cấu hình thanh toán.
+        services.Configure<MoMoSettings>(configuration.GetSection("Payment:MoMo"));
+        services.Configure<VnPaySettings>(configuration.GetSection("Payment:VnPay"));
+
+        // MoMo cần HttpClient để gọi API tạo yêu cầu; cả hai gateway cùng được cung cấp qua interface.
+        services.AddHttpClient<MoMoGateway>();
+        services.AddTransient<IPaymentGateway>(provider => provider.GetRequiredService<MoMoGateway>());
+        services.AddTransient<IPaymentGateway, VnPayGateway>();
+        services.Configure<EmailSettings>(configuration.GetSection("Email"));
+
+        // Liên kết đặt lại mật khẩu hết hạn sau Email:ResetTokenHours giờ (mặc định 1)
+        var tokenHours = configuration.GetValue<int?>("Email:ResetTokenHours") ?? 1;
+        services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(tokenHours));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IJwtService, JwtService>();
@@ -34,6 +63,7 @@ public static class DependencyInjection
             configuration.GetSection("Cloudinary"));
 
         services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
         // Thêm IFileStorage, IEmailService... ở đây
 
         return services;

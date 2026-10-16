@@ -24,6 +24,10 @@ using ChoDoCu.Application.Features.Service.Interfaces;
 using ChoDoCu.Application.Features.Service.Services;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using ChoDoCu.Application.Features.Account.Interfaces;
+using ChoDoCu.Application.Features.Account.Services;
+using ChoDoCu.Application.Features.Authorization.Interfaces;
+using ChoDoCu.Application.Features.Authorization.Services;
 
 namespace ChoDoCu.Application;
 
@@ -46,6 +50,10 @@ public static class DependencyInjection
         services.AddScoped<IBannerService, BannerService>();
         services.AddScoped<IDichVuService, DichVuAppService>();
         services.AddScoped<IThanhToanService, ThanhToanService>();
+        services.AddScoped<INguoiDungService, NguoiDungService>();
+        services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IRolePermissionService, RolePermissionService>();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         return services;
     }

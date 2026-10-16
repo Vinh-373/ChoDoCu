@@ -21,8 +21,6 @@ public interface IUnitOfWork
     IThanhToanRepository ThanhToans { get; }
     ILichSuTimKiemRepository LichSuTimKiems { get; }
     IBannerRepository Banners { get; }
-    IChucNangRepository ChucNangs { get; }
-    IRoleChucNangRepository RoleChucNangs { get; }
 
     Task<int> SaveChangesAsync();
 }

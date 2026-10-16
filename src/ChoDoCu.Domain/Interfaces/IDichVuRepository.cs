@@ -4,5 +4,6 @@ namespace ChoDoCu.Domain.Interfaces;
 
 public interface IDichVuRepository : IRepository<DichVu>
 {
-    Task<IReadOnlyList<DichVu>> DanhSachDangHoatDongAsync();
+    Task<IReadOnlyList<DichVu>> DanhSachDangHoatDongAsync();// Danh sách 
+    Task<IReadOnlyList<DichVu>> DanhSachQuanTriAsync();
 }
