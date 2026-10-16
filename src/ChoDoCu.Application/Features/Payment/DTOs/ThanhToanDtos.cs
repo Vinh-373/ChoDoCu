@@ -1,5 +1,11 @@
 namespace ChoDoCu.Application.Features.Payment.DTOs;
 
+// Phương thức thanh toán được phép hiển thị và lựa chọn khi tạo giao dịch.
+public record PhuongThucThanhToanResponse(
+    int Id,
+    string TenPhuongThuc,
+    string? MoTa);
+
 // Thông tin gói dịch vụ và phương thức người dùng chọn để bắt đầu thanh toán.
 public record MuaDichVuRequest(int IdDichVu, int IdPhuongThucTT);
 // Kết quả khởi tạo đơn, bao gồm URL chuyển người dùng sang trang thanh toán.

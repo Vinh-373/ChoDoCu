@@ -26,7 +26,7 @@ public static class AppPermissions
 
     /// Quyền liên quan đến dịch vụ (gói dịch vụ)
     public const string DichVuXem = "DichVu.Xem";
-    public const string DichVuMua = "DichVu.Mua";
+    public const string DichVuThem = "DichVu.Them";
     public const string DichVuSua = "DichVu.Sua";
     public const string DichVuXoa = "DichVu.Xoa";
 
@@ -41,7 +41,7 @@ public static class AppPermissions
         (BannerQuanLy, "Quản lý banner"),
 
         (DichVuXem, "Xem dịch vụ"),
-        (DichVuMua, "Mua dịch vụ"),
+        (DichVuThem, "Thêm dịch vụ"),
         (DichVuSua, "Sửa dịch vụ"),
         (DichVuXoa, "Xóa dịch vụ"),
 

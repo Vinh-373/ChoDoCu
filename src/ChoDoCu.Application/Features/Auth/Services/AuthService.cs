@@ -5,9 +5,11 @@ using ChoDoCu.Application.Features.Auth.Interfaces;
 using ChoDoCu.Domain.Constants;
 using ChoDoCu.Domain.Entities;
 using ChoDoCu.Domain.Enums;
+using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace ChoDoCu.Application.Features.Auth.Services;
 
@@ -21,6 +23,11 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwt;
     private readonly IValidator<DangKyRequest> _dangKyValidator;
     private readonly IValidator<DangNhapRequest> _dangNhapValidator;
+    private readonly IValidator<DoiMatKhauRequest> _doiMatKhauValidator;
+    private readonly IValidator<QuenMatKhauRequest> _quenMatKhauValidator;
+    private readonly IValidator<DatLaiMatKhauRequest> _datLaiMatKhauValidator;
+    private readonly IEmailService _email;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUnitOfWork uow,
@@ -28,7 +35,12 @@ public class AuthService : IAuthService
         RoleManager<IdentityRole<int>> roleManager,
         IJwtService jwt,
         IValidator<DangKyRequest> dangKyValidator,
-        IValidator<DangNhapRequest> dangNhapValidator)
+        IValidator<DangNhapRequest> dangNhapValidator,
+        IValidator<DoiMatKhauRequest> doiMatKhauValidator,
+        IValidator<QuenMatKhauRequest> quenMatKhauValidator,
+        IValidator<DatLaiMatKhauRequest> datLaiMatKhauValidator,
+        IEmailService email,
+        ILogger<AuthService> logger)
     {
         _uow = uow;
         _userManager = userManager;
@@ -36,6 +48,11 @@ public class AuthService : IAuthService
         _jwt = jwt;
         _dangKyValidator = dangKyValidator;
         _dangNhapValidator = dangNhapValidator;
+        _doiMatKhauValidator = doiMatKhauValidator;
+        _quenMatKhauValidator = quenMatKhauValidator;
+        _datLaiMatKhauValidator = datLaiMatKhauValidator;
+        _email = email;
+        _logger = logger;
     }
 
     public async Task<Result<AuthResponse>> DangKyAsync(DangKyRequest request)
@@ -110,6 +127,76 @@ public class AuthService : IAuthService
         await _userManager.ResetAccessFailedCountAsync(nguoiDung);
 
         return Result<AuthResponse>.Ok(await TaoAuthResponseAsync(nguoiDung));
+    }
+
+    public async Task<Result<bool>> DoiMatKhauAsync(int idNguoiDung, DoiMatKhauRequest request)
+    {
+        await _doiMatKhauValidator.ValidateAndThrowAsync(request);
+
+        var nguoiDung = await _userManager.FindByIdAsync(idNguoiDung.ToString())
+            ?? throw new NotFoundException(nameof(NguoiDung), idNguoiDung);
+
+        var result = await _userManager.ChangePasswordAsync(nguoiDung, request.MatKhauCu, request.MatKhauMoi);
+        if (!result.Succeeded)
+        {
+            return Result<bool>.Fail(
+                result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.PasswordMismatch))
+                    ? "Mật khẩu hiện tại không đúng."
+                    : GopLoi(result));
+        }
+
+        return Result<bool>.Ok(true);
+    }
+
+    public async Task QuenMatKhauAsync(QuenMatKhauRequest request)
+    {
+        await _quenMatKhauValidator.ValidateAndThrowAsync(request);
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var nguoiDung = await _userManager.FindByEmailAsync(email);
+
+        // Không có tài khoản hoặc đang bị khóa: im lặng, không cho người ngoài biết.
+        if (nguoiDung is null || nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
+            return;
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(nguoiDung);
+
+        try
+        {
+            await _email.GuiDatLaiMatKhauAsync(email, nguoiDung.HoTen, token);
+        }
+        catch (Exception ex)
+        {
+            // Lỗi SMTP chỉ ghi log; trả lỗi ra ngoài sẽ làm lộ việc email này có tồn tại.
+            _logger.LogError(ex, "Không gửi được email đặt lại mật khẩu cho người dùng {IdNguoiDung}.", nguoiDung.Id);
+        }
+    }
+
+    public async Task<Result<bool>> DatLaiMatKhauAsync(DatLaiMatKhauRequest request)
+    {
+        await _datLaiMatKhauValidator.ValidateAndThrowAsync(request);
+
+        const string LienKetKhongHopLe = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var nguoiDung = await _userManager.FindByEmailAsync(email);
+        if (nguoiDung is null || nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
+            return Result<bool>.Fail(LienKetKhongHopLe);
+
+        var result = await _userManager.ResetPasswordAsync(nguoiDung, request.Token, request.MatKhauMoi);
+        if (!result.Succeeded)
+        {
+            return Result<bool>.Fail(
+                result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.InvalidToken))
+                    ? LienKetKhongHopLe
+                    : GopLoi(result));
+        }
+
+        // Đặt lại mật khẩu xong thì cho đăng nhập lại ngay, kể cả khi đang bị khóa tạm do nhập sai.
+        await _userManager.SetLockoutEndDateAsync(nguoiDung, null);
+        await _userManager.ResetAccessFailedCountAsync(nguoiDung);
+
+        return Result<bool>.Ok(true);
     }
 
     private async Task<AuthResponse> TaoAuthResponseAsync(NguoiDung nd)

@@ -24,6 +24,18 @@ public class ThanhToanService : IThanhToanService
         _gateways = gateways.ToList();
     }
 
+    public async Task<List<PhuongThucThanhToanResponse>> LayPhuongThucThanhToanAsync()
+    {
+        var danhSach = await _uow.PhuongThucThanhToans.LayDanhSachHoatDongAsync();
+
+        return danhSach
+            .Select(x => new PhuongThucThanhToanResponse(
+                x.Id,
+                x.TenPhuongThuc,
+                x.MoTa))
+            .ToList();
+    }
+
     public async Task<MuaDichVuResponse> MuaDichVuAsync(
         int idNguoiDung,
         MuaDichVuRequest request,

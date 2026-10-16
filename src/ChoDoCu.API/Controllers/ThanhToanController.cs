@@ -32,6 +32,11 @@ public class ThanhToanController : ControllerBase
         _vnPaySettings = vnPaySettings.Value;
     }
 
+    [AllowAnonymous]
+    [HttpGet("phuong-thuc")]
+    public async Task<IActionResult> LayPhuongThucThanhToan()
+        => Ok(await _service.LayPhuongThucThanhToanAsync());
+
     // Các route dành cho người dùng đăng nhập; service lấy danh tính từ claim, không nhận userId từ client.
     [Authorize]
     [HttpPost("mua-dich-vu")]
@@ -44,6 +49,7 @@ public class ThanhToanController : ControllerBase
     public async Task<IActionResult> LichSuMuaDichVu()
         => Ok(await _service.LichSuMuaDichVuAsync(GetUserId()));
 
+    // Lấy trạng thái thanh toán của một giao dịch đã tạo
     [Authorize]
     [HttpGet("{idThanhToan:int}/trang-thai")]
     public async Task<IActionResult> TrangThai(int idThanhToan)

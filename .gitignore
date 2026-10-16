@@ -488,3 +488,5 @@ $RECYCLE.BIN/
 /Properties/
 !src/ChoDoCu.Infrastructure/Migrations/
 !src/ChoDoCu.Infrastructure/Migrations/*.cs
+
+!src/ChoDoCu.API/appsettings.json
