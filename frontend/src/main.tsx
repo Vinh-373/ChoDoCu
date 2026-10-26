@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import "./index.css";
+import "./styles/tailwind.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import AuthFormHeader from "../../components/auth/AuthFormHeader";
+import { AuthField, AuthSelect } from "../../components/auth/AuthField";
+import AuthSwitchPrompt from "../../components/auth/AuthSwitchPrompt";
+import FormAlert from "../../components/auth/FormAlert";
+import SubmitButton from "../../components/auth/SubmitButton";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import type { DangKyRequest } from "../../types";
@@ -45,51 +50,36 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-wrap">
-      <form className="panel auth-card stack" onSubmit={submit}>
-        <div>
-          <h1>Tạo tài khoản</h1>
-          <p className="muted">Mất chưa đến một phút.</p>
+    <>
+      <AuthFormHeader icon="person_add" eyebrow="Tạo tài khoản mới" title="Đăng ký thành viên" subtitle="Mất chưa đến một phút." />
+      <form className="flex flex-col gap-space-lg" onSubmit={submit}>
+        {error && <FormAlert message={error} />}
+        <AuthField id="hoTen" label="Họ và tên" icon="badge" autoComplete="name" required maxLength={255} value={form.hoTen} onChange={(e) => set("hoTen", e.target.value)} />
+        <AuthField id="email" label="Email" icon="mail" type="email" autoComplete="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
+        <AuthField id="sdt" label="Số điện thoại" icon="call" type="tel" autoComplete="tel" placeholder="0912345678" required value={form.soDienThoai} onChange={(e) => set("soDienThoai", e.target.value)} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-lg">
+          <AuthField id="ngaySinh" label="Ngày sinh" icon="cake" type="date" required value={form.ngaySinh} onChange={(e) => set("ngaySinh", e.target.value)} />
+          <AuthSelect id="gioiTinh" label="Giới tính" icon="wc" value={form.gioiTinh} onChange={(e) => set("gioiTinh", e.target.value as DangKyRequest["gioiTinh"])}>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+            <option value="Khác">Khác</option>
+          </AuthSelect>
         </div>
-        {error && <div className="alert" role="alert">{error}</div>}
-        <div className="field">
-          <label htmlFor="hoTen">Họ và tên</label>
-          <input id="hoTen" type="text" autoComplete="name" required maxLength={255} value={form.hoTen} onChange={(e) => set("hoTen", e.target.value)} />
-        </div>
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" autoComplete="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
-        </div>
-        <div className="field">
-          <label htmlFor="sdt">Số điện thoại</label>
-          <input id="sdt" type="tel" autoComplete="tel" required value={form.soDienThoai} onChange={(e) => set("soDienThoai", e.target.value)} />
-        </div>
-        <div className="form-grid">
-          <div className="field">
-            <label htmlFor="ns">Ngày sinh</label>
-            <input id="ns" type="date" required value={form.ngaySinh} onChange={(e) => set("ngaySinh", e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="gt">Giới tính</label>
-            <select id="gt" value={form.gioiTinh} onChange={(e) => set("gioiTinh", e.target.value as DangKyRequest["gioiTinh"])}>
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
-              <option value="Khác">Khác</option>
-            </select>
-          </div>
-        </div>
-        <div className="field">
-          <label htmlFor="mk">Mật khẩu</label>
-          <input id="mk" type="password" autoComplete="new-password" required minLength={6} value={form.matKhau} onChange={(e) => set("matKhau", e.target.value)} />
-          <span className="hint">Tối thiểu 6 ký tự.</span>
-        </div>
-        <button className="btn btn-block" disabled={busy}>
-          {busy ? "Đang tạo tài khoản…" : "Đăng ký"}
-        </button>
-        <p className="muted">
-          Đã có tài khoản? <Link to="/dang-nhap">Đăng nhập</Link>
-        </p>
+        <AuthField
+          id="matKhau"
+          label="Mật khẩu"
+          icon="lock"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={6}
+          hint="Tối thiểu 6 ký tự."
+          value={form.matKhau}
+          onChange={(e) => set("matKhau", e.target.value)}
+        />
+        <SubmitButton busy={busy} label="Đăng ký" busyLabel="Đang tạo tài khoản…" />
       </form>
-    </div>
+      <AuthSwitchPrompt text="Đã có tài khoản?" linkText="Đăng nhập" to="/dang-nhap" />
+    </>
   );
 }
