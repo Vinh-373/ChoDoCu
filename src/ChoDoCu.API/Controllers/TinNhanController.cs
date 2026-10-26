@@ -24,7 +24,7 @@ public class TinNhanController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> Gui(GuiTinNhanRequest request)
-        => Ok(await _service.GuiAsync(GetUserId(), request));
+        => StatusCode(StatusCodes.Status201Created, await _service.GuiAsync(GetUserId(), request));
 
     private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

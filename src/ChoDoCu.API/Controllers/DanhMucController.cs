@@ -19,7 +19,8 @@ public class DanhMucController : ControllerBase
 
     [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpPost]
-    public async Task<IActionResult> Tao(TaoDanhMucRequest request) => Ok(await _service.TaoAsync(request));
+    public async Task<IActionResult> Tao(TaoDanhMucRequest request)
+        => StatusCode(StatusCodes.Status201Created, await _service.TaoAsync(request));
 
     [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpPut("{id:int}")]

@@ -19,7 +19,8 @@ public class BannerController : ControllerBase
 
     [HasPermission(AppPermissions.BannerQuanLy)]
     [HttpPost]
-    public async Task<IActionResult> Tao(TaoBannerRequest request) => Ok(await _service.TaoAsync(request));
+    public async Task<IActionResult> Tao(TaoBannerRequest request)
+        => StatusCode(StatusCodes.Status201Created, await _service.TaoAsync(request));
 
     [HasPermission(AppPermissions.BannerQuanLy)]
     [HttpDelete("{id:int}")]

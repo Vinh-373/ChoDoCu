@@ -1,5 +1,6 @@
 using ChoDoCu.Application.Features.Authorization.DTOs;
 using ChoDoCu.Application.Features.Authorization.Interfaces;
+using ChoDoCu.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace ChoDoCu.Application.Features.Authorization.Services;
@@ -50,12 +51,12 @@ public class RoleService : IRoleService
         var tenVaiTro = request.TenVaiTro?.Trim();
 
         if (string.IsNullOrWhiteSpace(tenVaiTro))
-            throw new InvalidOperationException("Tên vai trò không được để trống.");
+            throw new DomainException("Tên vai trò không được để trống.");
 
         var existingRole = await _roleManager.FindByNameAsync(tenVaiTro);
 
         if (existingRole != null)
-            throw new InvalidOperationException("Vai trò đã tồn tại.");
+            throw new ConflictException("Vai trò đã tồn tại.");
 
         var role = new IdentityRole<int>
         {
@@ -65,13 +66,7 @@ public class RoleService : IRoleService
         var result = await _roleManager.CreateAsync(role);
 
         if (!result.Succeeded)
-        {
-            var errors = string.Join(
-                "; ",
-                result.Errors.Select(e => e.Description));
-
-            throw new InvalidOperationException(errors);
-        }
+            ThrowRoleIdentityErrors(result);
 
         return new RoleDto(role.Id, role.Name ?? string.Empty);
     }
@@ -91,25 +86,19 @@ public class RoleService : IRoleService
         var tenVaiTro = request.TenVaiTro?.Trim();
 
         if (string.IsNullOrWhiteSpace(tenVaiTro))
-            throw new InvalidOperationException("Tên vai trò không được để trống.");
+            throw new DomainException("Tên vai trò không được để trống.");
 
         var existingRole = await _roleManager.FindByNameAsync(tenVaiTro);
 
         if (existingRole != null && existingRole.Id != role.Id)
-            throw new InvalidOperationException("Tên vai trò đã được sử dụng.");
+            throw new ConflictException("Tên vai trò đã được sử dụng.");
 
         role.Name = tenVaiTro;
 
         var result = await _roleManager.UpdateAsync(role);
 
         if (!result.Succeeded)
-        {
-            var errors = string.Join(
-                "; ",
-                result.Errors.Select(e => e.Description));
-
-            throw new InvalidOperationException(errors);
-        }
+            ThrowRoleIdentityErrors(result);
 
         return true;
     }
@@ -127,14 +116,21 @@ public class RoleService : IRoleService
         var result = await _roleManager.DeleteAsync(role);
 
         if (!result.Succeeded)
-        {
-            var errors = string.Join(
-                "; ",
-                result.Errors.Select(e => e.Description));
-
-            throw new InvalidOperationException(errors);
-        }
+            ThrowRoleIdentityErrors(result);
 
         return true;
+    }
+
+    private static void ThrowRoleIdentityErrors(IdentityResult result)
+    {
+        var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+
+        if (result.Errors.Any(e => e.Code is "DuplicateRoleName" or "ConcurrencyFailure"))
+            throw new ConflictException(errors);
+
+        if (result.Errors.Any(e => e.Code == "InvalidRoleName"))
+            throw new DomainException(errors);
+
+        throw new InvalidOperationException(errors);
     }
 }

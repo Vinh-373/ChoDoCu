@@ -37,7 +37,7 @@ public class UploadController : ControllerBase
 
         if (file.Length > maxFileSize)
         {
-            return BadRequest(new
+            return StatusCode(StatusCodes.Status413PayloadTooLarge, new
             {
                 message = "Ảnh không được vượt quá 5 MB."
             });
@@ -69,7 +69,7 @@ public class UploadController : ControllerBase
                 type,
                 cancellationToken);
 
-            return Ok(new
+            return StatusCode(StatusCodes.Status201Created, new
             {
                 message = "Upload ảnh thành công.",
                 type,

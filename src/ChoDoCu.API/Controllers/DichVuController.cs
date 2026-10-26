@@ -26,7 +26,7 @@ public class DichVuController : ControllerBase
     [HasPermission(AppPermissions.DichVuThem)]
     [HttpPost ]
     public async Task<IActionResult> Tao(TaoDichVuRequest request)
-        => Ok(await _service.TaoAsync(request));
+        => StatusCode(StatusCodes.Status201Created, await _service.TaoAsync(request));
 
     // Cập nhật thông tin gói dịch vụ
     [HasPermission(AppPermissions.DichVuSua)]

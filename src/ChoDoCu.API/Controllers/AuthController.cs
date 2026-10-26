@@ -18,7 +18,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> DangKy(DangKyRequest request)
     {
         var result = await _authService.DangKyAsync(request);
-        return result.IsSuccess ? Ok(result.Data) : BadRequest(new { message = result.Error });
+        return result.IsSuccess ? Created(string.Empty, result.Data) : BadRequest(new { message = result.Error });
     }
 
     [HttpPost("dang-nhap")]
