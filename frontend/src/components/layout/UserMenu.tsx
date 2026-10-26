@@ -55,8 +55,17 @@ export default function UserMenu() {
             <MaterialIcon name="admin_panel_settings" size={20} /> Trang quản trị
           </Link>
         )}
-        <Link to="/yeu-thich" className={itemClass}>
+        <Link to="tai-khoan/ho-so" className={itemClass}>
+          <MaterialIcon name="person" size={20} /> Hồ sơ của tôi
+        </Link>
+        <Link to="tai-khoan/quan-ly-tin" className={itemClass}>
+          <MaterialIcon name="list" size={20} /> Quản lý tin đăng
+        </Link>
+        <Link to="tai-khoan/yeu-thich" className={itemClass}>
           <MaterialIcon name="favorite" size={20} /> Tin đã lưu
+        </Link>
+        <Link to="tai-khoan/doi-mat-khau" className={itemClass}>
+          <MaterialIcon name="key" size={20} /> Đổi mật khẩu
         </Link>
         {/* Các lối tắt bị ẩn khỏi thanh nav ở màn hình nhỏ thì nằm trong menu này. */}
         <Link to="/tin-nhan" className={`${itemClass} sm:hidden`}>

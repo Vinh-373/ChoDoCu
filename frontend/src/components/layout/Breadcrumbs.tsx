@@ -9,13 +9,16 @@ interface Segment {
 }
 
 const SEGMENTS: Record<string, Segment> = {
+  "tai-khoan": { label: "Tài khoản" },
+  "ho-so": { label: "Hồ sơ của tôi", to: "/ho-so" },
+  "quan-ly-tin": { label: "Quản lý tin đăng", to: "/quan-ly-tin" },
   "tim-kiem": { label: "Tìm kiếm", to: "/tim-kiem" },
   "bai-dang": { label: "Tin đăng", to: "/tim-kiem" },
   "dich-vu": { label: "Dịch vụ đẩy tin", to: "/dich-vu" },
-  "dang-nhap": { label: "Đăng nhập" },
-  "dang-ky": { label: "Đăng ký" },
-  "dang-bai": { label: "Đăng tin" },
-  "yeu-thich": { label: "Tin đã lưu" },
+  "dang-nhap": { label: "Đăng nhập", to: "/dang-nhap" },
+  "dang-ky": { label: "Đăng ký", to: "/dang-ky" },
+  "dang-bai": { label: "Đăng tin", to: "/dang-bai" },
+  "yeu-thich": { label: "Tin đã lưu", to: "/yeu-thich" },
   "thong-bao": { label: "Thông báo" },
   "tin-nhan": { label: "Tin nhắn", to: "/tin-nhan" },
   "quan-tri": { label: "Quản trị", to: "/quan-tri" },

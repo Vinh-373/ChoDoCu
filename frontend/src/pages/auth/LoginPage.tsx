@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import AuthDivider from "../../components/auth/AuthDivider";
 import AuthFormHeader from "../../components/auth/AuthFormHeader";
 import { AuthField } from "../../components/auth/AuthField";
 import AuthSwitchPrompt from "../../components/auth/AuthSwitchPrompt";
 import FormAlert from "../../components/auth/FormAlert";
+import SocialLoginButtons from "../../components/auth/SocialLoginButtons";
 import SubmitButton from "../../components/auth/SubmitButton";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
@@ -72,6 +74,12 @@ export default function LoginPage() {
         />
         <SubmitButton busy={busy} label="Đăng nhập" busyLabel="Đang đăng nhập…" />
       </form>
+
+      <AuthSwitchPrompt text="Quên mật khẩu?" linkText="Khôi phục ngay" to="/quen-mat-khau" />
+
+      <AuthDivider text="Hoặc tiếp tục với" />
+      <SocialLoginButtons />
+
       <AuthSwitchPrompt text="Chưa có tài khoản?" linkText="Đăng ký ngay" to="/dang-ky" />
     </>
   );

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChoDoCu.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261006034932_AddRoleFunction")]
-    partial class AddRoleFunction
+    [Migration("20261024033300_CreateIntial")]
+    partial class CreateIntial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -214,30 +214,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.HasIndex("IdNguoiDung");
 
                     b.ToTable("baoCao", (string)null);
-                });
-
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.ChucNang", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("TenChucNang")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("tenChucNang");
-
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("trangThai");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ChucNangs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.DanhMuc", b =>
@@ -631,12 +607,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("phoneNumberConfirmed");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("idRole");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("securityStamp");
@@ -686,7 +656,7 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[userName] IS NOT NULL");
 
-                    b.ToTable("nguoiDung", (string)null);
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.PhuongThucThanhToan", b =>
@@ -748,89 +718,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.HasIndex("IdThanhPho");
 
                     b.ToTable("phuongXa", (string)null);
-                });
-
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("concurrencyStamp");
-
-                    b.Property<string>("MoTa")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("moTa");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)")
-                        .HasColumnName("normalizedName");
-
-                    b.Property<string>("TenChucVu")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("tenChucVu");
-
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("trangThai");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[normalizedName] IS NOT NULL");
-
-                    b.ToTable("Roles", (string)null);
-                });
-
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.RoleChucNang", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ChucNangId")
-                        .HasColumnType("int")
-                        .HasColumnName("chucNangId");
-
-                    b.Property<int>("IdChucNang")
-                        .HasColumnType("int")
-                        .HasColumnName("idChucNang");
-
-                    b.Property<int>("IdRole")
-                        .HasColumnType("int")
-                        .HasColumnName("idRole");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int")
-                        .HasColumnName("roleId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChucNangId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("RoleChucNangs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.SanPham", b =>
@@ -949,9 +836,28 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("idPhuongThucTT");
 
+                    b.Property<string>("MaGiaoDichCongTT")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("maGiaoDichCongTT");
+
+                    b.Property<string>("MaGiaoDichNgoai")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("maGiaoDichNgoai");
+
+                    b.Property<string>("MaPhanHoiCongTT")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("maPhanHoiCongTT");
+
                     b.Property<DateTime>("NgayTao")
                         .HasColumnType("datetime2")
                         .HasColumnName("ngayTao");
+
+                    b.Property<DateTime?>("NgayThanhToan")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ngayThanhToan");
 
                     b.Property<decimal>("TongTien")
                         .HasPrecision(18, 2)
@@ -969,6 +875,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.HasIndex("IdMuaDichVu");
 
                     b.HasIndex("IdPhuongThucTT");
+
+                    b.HasIndex("MaGiaoDichNgoai")
+                        .IsUnique()
+                        .HasFilter("[maGiaoDichNgoai] IS NOT NULL");
 
                     b.ToTable("thanhToan", (string)null);
                 });
@@ -1113,6 +1023,40 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("yeuThich", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("concurrencyStamp");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("normalizedName");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[normalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -1432,25 +1376,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Navigation("ThanhPho");
                 });
 
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.RoleChucNang", b =>
-                {
-                    b.HasOne("ChoDoCu.Domain.Entities.ChucNang", "ChucNang")
-                        .WithMany("RoleChucNangs")
-                        .HasForeignKey("ChucNangId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ChoDoCu.Domain.Entities.Role", "Role")
-                        .WithMany("RoleChucNangs")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ChucNang");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("ChoDoCu.Domain.Entities.SanPham", b =>
                 {
                     b.HasOne("ChoDoCu.Domain.Entities.DanhMuc", "DanhMuc")
@@ -1575,7 +1500,7 @@ namespace ChoDoCu.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("ChoDoCu.Domain.Entities.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1602,7 +1527,7 @@ namespace ChoDoCu.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("ChoDoCu.Domain.Entities.Role", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1627,11 +1552,6 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.BaiDang", b =>
                 {
                     b.Navigation("AnhSanPhams");
-                });
-
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.ChucNang", b =>
-                {
-                    b.Navigation("RoleChucNangs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.DanhMuc", b =>
@@ -1684,11 +1604,6 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.PhuongThucThanhToan", b =>
                 {
                     b.Navigation("ThanhToans");
-                });
-
-            modelBuilder.Entity("ChoDoCu.Domain.Entities.Role", b =>
-                {
-                    b.Navigation("RoleChucNangs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.SanPham", b =>

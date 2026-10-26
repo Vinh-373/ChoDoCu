@@ -44,7 +44,8 @@ export default function HeaderNav() {
       <NavItem to="/dich-vu" icon="rocket_launch" label="Dịch vụ" className="hidden lg:flex" />
       {user ? (
         <>
-          <NavItem to="/yeu-thich" icon="favorite" label="Tin đã lưu" className="hidden sm:flex" />
+          {/* <NavItem to="/taikhoan" icon="account_circle" label="Tài khoản" className="hidden sm:flex" />
+          <NavItem to="/yeu-thich" icon="favorite" label="Tin đã lưu" className="hidden sm:flex" /> */}
           <NavItem to="/tin-nhan" icon="chat" label="Chat" className="hidden sm:flex" />
           <NavItem to="/thong-bao" icon="notifications" label="Thông báo" badge={unread} />
         </>

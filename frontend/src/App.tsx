@@ -13,6 +13,7 @@ import Favorites from "./pages/account/Favorites";
 import Notifications from "./pages/account/Notifications";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ChatPage from "./pages/chat/ChatPage";
 import HomePage from "./pages/home/HomePage";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,9 @@ import PostCreate from "./pages/post/PostCreate";
 import PostDetail from "./pages/post/PostDetail";
 import PostSearch from "./pages/post/PostSearch";
 import ServicesPage from "./pages/service/ServicesPage";
+import ProfilePage from "./pages/account/ProfilePage";
+import MyPosts from "./pages/account/MyPosts";
+import ChangePassword from "./pages/account/ChangePassword";
 
 export default function App() {
   return (
@@ -30,6 +34,7 @@ export default function App() {
           <Route path="dang-nhap" element={<LoginPage />} />
           <Route path="dang-ky" element={<RegisterPage />} />
         </Route>
+          <Route path="quen-mat-khau" element={<ForgotPasswordPage />} />
 
         {/* Các trang còn lại: khung .container */}
         <Route element={<ContainerLayout />}>
@@ -41,8 +46,11 @@ export default function App() {
 
           {/* Cần đăng nhập */}
           <Route element={<ProtectedRoute />}>
+            <Route path="tai-khoan/ho-so" element={<ProfilePage />} />
+            <Route path="tai-khoan/quan-ly-tin" element={<MyPosts />} />
+            <Route path="tai-khoan/doi-mat-khau" element={<ChangePassword />} />
             <Route path="dang-bai" element={<PostCreate />} />
-            <Route path="yeu-thich" element={<Favorites />} />
+            <Route path="tai-khoan/yeu-thich" element={<Favorites />} />
             <Route path="thong-bao" element={<Notifications />} />
             <Route path="tin-nhan" element={<ChatPage />} />
             <Route path="tin-nhan/:idHoiThoai" element={<ChatPage />} />
