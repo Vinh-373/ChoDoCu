@@ -63,8 +63,8 @@ public static class DependencyInjection
             configuration.GetSection("Cloudinary"));
 
         services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
+        services.AddScoped<IFileStorage, LocalFileStorage>();
         services.AddScoped<IEmailService, SmtpEmailService>();
-        // Thêm IFileStorage, IEmailService... ở đây
 
         return services;
     }

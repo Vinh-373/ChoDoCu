@@ -17,6 +17,10 @@ public class DanhMucController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetCay() => Ok(await _service.GetCayDanhMucAsync());
 
+    [HttpGet("{id:int}/thuoc-tinh")]
+    public async Task<IActionResult> GetThuocTinh(int id, [FromQuery] int? idHang)
+        => Ok(await _service.GetThuocTinhDanhMucAsync(id, idHang));
+
     [HasPermission(AppPermissions.DanhMucQuanLy)]
     [HttpPost]
     public async Task<IActionResult> Tao(TaoDanhMucRequest request) => Ok(await _service.TaoAsync(request));

@@ -5,6 +5,8 @@ public enum TrangThaiBaiDang
 {
     ChoDuyet = 0,
     DaDuyet = 1,
-    TuChoi = 2,
-    DaAn = 3
+    BiTuChoi = 2,
+    TuChoi = BiTuChoi,
+    DaAn = 3,
+    DaBan = 4
 }

@@ -6,3 +6,14 @@ public record CapNhatDanhMucRequest(string TenDanhMuc, string? AnhDanhMuc, strin
 public record DanhMucResponse(
     int Id, int? IdDanhMucCha, string TenDanhMuc, string? AnhDanhMuc, string TrangThai,
     List<DanhMucResponse> DanhMucCons);
+
+public record ThuocTinhDanhMucResponse(
+    int Id,
+    string TenThuocTinh,
+    string KieuDuLieu,
+    bool BatBuoc,
+    IReadOnlyList<ThuocTinhLuaChonResponse> DanhSachLuaChon,
+    int ThuTu,
+    int? IdThuocTinhCha);
+
+public record ThuocTinhLuaChonResponse(string GiaTri, string Ten, int? IdGiaTriCha = null);
