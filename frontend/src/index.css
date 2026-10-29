@@ -4,15 +4,15 @@
    phần còn lại giữ yên tĩnh: nền xám xanh lạnh, mực navy, một màu xanh chợ cho hành động.
    ========================================================================== */
 :root {
-  --ink: #14213d;
-  --ink-2: #46526b;
-  --ink-3: #75809a;
-  --paper: #f2f5f9;
+  --ink: #1c1b1b;
+  --ink-2: #584235;
+  --ink-3: #7d6556;
+  --paper: #fcf9f8;
   --card: #ffffff;
-  --line: #dde3ec;
-  --brand: #1b4fd8;
-  --brand-strong: #1540ad;
-  --brand-soft: #e5ecff;
+  --line: #ecdfd6;
+  --brand: #ff7a00;
+  --brand-strong: #994700;
+  --brand-soft: #ffdbc8;
   --sticker: #ffcf33;
   --sticker-ink: #382b00;
   --alert: #d63a24;
@@ -22,31 +22,11 @@
   --shadow: 0 1px 2px rgba(20, 33, 61, 0.06), 0 8px 24px -12px rgba(20, 33, 61, 0.18);
   --radius: 12px;
   --radius-sm: 8px;
-  --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Be Vietnam Pro", "Inter", system-ui, sans-serif;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #e9eefb;
-    --ink-2: #b4bfd6;
-    --ink-3: #8592ad;
-    --paper: #0e1524;
-    --card: #162033;
-    --line: #26324a;
-    --brand: #6f97ff;
-    --brand-strong: #8fb0ff;
-    --brand-soft: #1b2a52;
-    --sticker: #ffcf33;
-    --sticker-ink: #382b00;
-    --alert: #ff7a66;
-    --alert-soft: #3a1f1b;
-    --ok: #4cc593;
-    --ok-soft: #153327;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-    color-scheme: dark;
-  }
-}
 
 *,
 *::before,
@@ -69,6 +49,7 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--font-display);
   margin: 0;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -78,7 +59,7 @@ p {
   margin: 0;
 }
 a {
-  color: var(--brand);
+  color: var(--brand-strong);
   text-decoration: none;
 }
 a:hover {
@@ -98,7 +79,6 @@ textarea {
 :focus-visible {
   outline: 3px solid var(--brand);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 .muted {
   color: var(--ink-3);
@@ -114,7 +94,8 @@ textarea {
 
 /* ---------- Bố cục ---------- */
 .container {
-  width: min(1180px, 100% - 32px);
+  /* Cùng bề rộng nội dung với Header/Footer (max-w-7xl trừ padding 24px mỗi bên). */
+  width: min(1232px, 100% - 48px);
   margin-inline: auto;
 }
 .page {
@@ -272,16 +253,18 @@ textarea {
   font-size: 0.82rem;
   color: var(--ink-3);
 }
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-input[type="date"],
-input[type="number"],
-input[type="url"],
-input[type="search"],
-select,
-textarea {
+:where(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="number"],
+  input[type="url"],
+  input[type="search"],
+  select,
+  textarea
+) {
   width: 100%;
   min-height: 42px;
   padding: 9px 12px;
@@ -294,9 +277,7 @@ textarea {
   min-height: 110px;
   resize: vertical;
 }
-input:focus,
-select:focus,
-textarea:focus {
+:where(input, select, textarea):focus {
   outline: none;
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-soft);
@@ -362,7 +343,7 @@ tr:last-child td {
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -433,91 +414,6 @@ tr:last-child td {
 }
 
 /* ---------- Header ---------- */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background: color-mix(in srgb, var(--card) 92%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-}
-.header-inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 68px;
-}
-.logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink);
-  font-weight: 800;
-  font-size: 1.2rem;
-  letter-spacing: -0.03em;
-}
-.logo:hover {
-  text-decoration: none;
-}
-.logo-mark {
-  display: block;
-  width: 34px;
-  height: 34px;
-}
-.header-search {
-  flex: 1;
-  max-width: 520px;
-  position: relative;
-}
-.header-search input {
-  padding-left: 40px;
-  border-radius: 999px;
-  background: var(--paper);
-}
-.header-search .icon-left {
-  position: absolute;
-  left: 13px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ink-3);
-  pointer-events: none;
-}
-.header-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.nav-link {
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  color: var(--ink-2);
-  font-weight: 600;
-}
-.nav-link:hover,
-.nav-link.is-active {
-  background: var(--brand-soft);
-  color: var(--brand);
-  text-decoration: none;
-}
-.user-menu {
-  position: relative;
-}
-.user-menu summary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 4px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.user-menu summary::-webkit-details-marker {
-  display: none;
-}
-.user-menu summary:hover {
-  background: var(--brand-soft);
-}
 .avatar {
   display: grid;
   place-items: center;
@@ -527,47 +423,6 @@ tr:last-child td {
   background: var(--sticker);
   color: var(--sticker-ink);
   font-weight: 800;
-}
-.menu-pop {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  min-width: 220px;
-  padding: 8px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.menu-pop a,
-.menu-pop button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-.menu-pop a:hover,
-.menu-pop button:hover {
-  background: var(--brand-soft);
-  text-decoration: none;
-}
-.menu-pop .who {
-  padding: 8px 10px 10px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 6px;
-}
-.site-footer {
-  padding: 28px 0;
-  border-top: 1px solid var(--line);
-  color: var(--ink-3);
-  font-size: 0.88rem;
 }
 
 /* ---------- Tem giá (chi tiết nhận diện) ---------- */
@@ -1134,7 +989,7 @@ tr:last-child td {
 .admin-nav a:hover,
 .admin-nav a.is-active {
   background: var(--brand-soft);
-  color: var(--brand);
+  color: var(--brand-strong);
   text-decoration: none;
 }
 .tree ul {
@@ -1212,15 +1067,6 @@ tr:last-child td {
   }
 }
 @media (max-width: 720px) {
-  .header-inner {
-    flex-wrap: wrap;
-    padding-block: 10px;
-  }
-  .header-search {
-    order: 3;
-    flex-basis: 100%;
-    max-width: none;
-  }
   .form-grid {
     grid-template-columns: 1fr;
   }

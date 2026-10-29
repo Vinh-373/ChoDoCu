@@ -29,9 +29,21 @@ Khớp với API của backend ASP.NET Core `ChoDoCu` (JWT + ASP.NET Identity).
 - `src/types` – kiểu DTO khớp backend.
 - `src/contexts` – Toast, Auth, Favorites, Notification.
 - `src/pages` – home, post, auth, account, chat, service, admin.
-- `src/index.css` – toàn bộ giao diện (hỗ trợ dark mode).
+- `src/components/layout` – khung trang, mỗi phần một file:
+  `Layout` (Header + nội dung + Footer) · `Header` gồm `Logo`, `SearchBar` (chọn thành phố + từ khoá), `HeaderNav`,
+  `PostAdButton`, `UserMenu` và `Breadcrumbs` · `Footer` · `ContainerLayout` (khung rộng cho trang thường) · `AdminLayout`.
+- `src/components/auth` – trang đăng nhập/đăng ký tách thành: `AuthLayout` (khung hai cột), `AuthShowcase` (cột trái quảng bá),
+  `AuthFormHeader`, `AuthField`/`AuthSelect`, `SubmitButton`, `FormAlert`, `AuthSwitchPrompt`.
+  `pages/auth/LoginPage` và `RegisterPage` chỉ còn phần form và gọi API.
+- `src/index.css` – CSS cho các trang nội dung (tem giá, lưới tin, chat, quản trị…), đã đổi sang tông cam của thiết kế.
+- `tailwind.config.js` – màu/khoảng cách/cỡ chữ lấy từ thiết kế. Tailwind dùng cho Header, Footer và khối auth;
+  `preflight` và `container` tắt để không làm vỡ `index.css`.
+- Icon dùng Material Symbols (nạp từ Google Fonts trong `index.html`, cần internet).
+
+Route: `Layout` → `AuthLayout` (/dang-nhap, /dang-ky) và `ContainerLayout` (các trang còn lại), xem `src/App.tsx`.
 
 ## Giới hạn hiện tại (do backend chưa có endpoint)
+- Đăng nhập chỉ bằng email (BE chưa hỗ trợ SĐT). Chưa có "Quên mật khẩu", "Ghi nhớ đăng nhập", đăng nhập Google/Facebook nên các phần này không đưa vào form.
 - Chưa có API upload ảnh: người đăng dán URL ảnh (1–10 ảnh).
 - Chưa có API danh sách tin chờ duyệt: trang "Duyệt bài" mở tin theo mã; staff cũng duyệt được ngay ở trang chi tiết.
 - Lọc danh mục chỉ theo danh mục con (lá).

@@ -6,11 +6,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ChoDoCu.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class CreateIntial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "AspNetRoles",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    normalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    concurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoles", x => x.id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "banner",
                 columns: table => new
@@ -129,6 +144,27 @@ namespace ChoDoCu.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetRoleClaims",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    roleId = table.Column<int>(type: "int", nullable: false),
+                    claimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    claimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoleClaims", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_AspNetRoleClaims_AspNetRoles_roleId",
+                        column: x => x.roleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "dongSanPham",
                 columns: table => new
                 {
@@ -198,38 +234,48 @@ namespace ChoDoCu.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "nguoiDung",
+                name: "AspNetUsers",
                 columns: table => new
                 {
                     idNguoiDung = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     anhNguoiDung = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    userName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    passWord = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     idThanhPho = table.Column<int>(type: "int", nullable: true),
                     idPhuongXa = table.Column<int>(type: "int", nullable: true),
                     hoTen = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     soDienThoai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ngaySinh = table.Column<DateTime>(type: "datetime2", nullable: false),
                     gioiTinh = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    idRole = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     luotDang = table.Column<int>(type: "int", nullable: false),
                     luotDay = table.Column<int>(type: "int", nullable: false),
                     ngayTao = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    trangThai = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    trangThai = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    userName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    normalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    normalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    emailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    passWord = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    securityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    concurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    phoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    phoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    twoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    lockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    lockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    accessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_nguoiDung", x => x.idNguoiDung);
+                    table.PrimaryKey("PK_AspNetUsers", x => x.idNguoiDung);
                     table.ForeignKey(
-                        name: "FK_nguoiDung_phuongXa_idPhuongXa",
+                        name: "FK_AspNetUsers_phuongXa_idPhuongXa",
                         column: x => x.idPhuongXa,
                         principalTable: "phuongXa",
                         principalColumn: "idPhuongXa",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_nguoiDung_thanhPho_idThanhPho",
+                        name: "FK_AspNetUsers_thanhPho_idThanhPho",
                         column: x => x.idThanhPho,
                         principalTable: "thanhPho",
                         principalColumn: "idThanhPho",
@@ -280,6 +326,91 @@ namespace ChoDoCu.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetUserClaims",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    userId = table.Column<int>(type: "int", nullable: false),
+                    claimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    claimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserClaims", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserClaims_AspNetUsers_userId",
+                        column: x => x.userId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserLogins",
+                columns: table => new
+                {
+                    loginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    providerKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    providerDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    userId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.loginProvider, x.providerKey });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserLogins_AspNetUsers_userId",
+                        column: x => x.userId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserRoles",
+                columns: table => new
+                {
+                    userId = table.Column<int>(type: "int", nullable: false),
+                    roleId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserRoles", x => new { x.userId, x.roleId });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetRoles_roleId",
+                        column: x => x.roleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetUsers_userId",
+                        column: x => x.userId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserTokens",
+                columns: table => new
+                {
+                    userId = table.Column<int>(type: "int", nullable: false),
+                    loginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    value = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.userId, x.loginProvider, x.name });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserTokens_AspNetUsers_userId",
+                        column: x => x.userId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "hoiThoai",
                 columns: table => new
                 {
@@ -294,15 +425,15 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_hoiThoai", x => x.idHoiThoai);
                     table.ForeignKey(
-                        name: "FK_hoiThoai_nguoiDung_idNguoiDung1",
+                        name: "FK_hoiThoai_AspNetUsers_idNguoiDung1",
                         column: x => x.idNguoiDung1,
-                        principalTable: "nguoiDung",
+                        principalTable: "AspNetUsers",
                         principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_hoiThoai_nguoiDung_idNguoiDung2",
+                        name: "FK_hoiThoai_AspNetUsers_idNguoiDung2",
                         column: x => x.idNguoiDung2,
-                        principalTable: "nguoiDung",
+                        principalTable: "AspNetUsers",
                         principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -321,9 +452,9 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_lichSuTimKiem", x => x.idLichSu);
                     table.ForeignKey(
-                        name: "FK_lichSuTimKiem_nguoiDung_idNguoiDung",
+                        name: "FK_lichSuTimKiem_AspNetUsers_idNguoiDung",
                         column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
+                        principalTable: "AspNetUsers",
                         principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -344,16 +475,16 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_muaDichVu", x => x.idMuaDichVu);
                     table.ForeignKey(
+                        name: "FK_muaDichVu_AspNetUsers_idNguoiDung",
+                        column: x => x.idNguoiDung,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_muaDichVu_dichVu_idDichVu",
                         column: x => x.idDichVu,
                         principalTable: "dichVu",
                         principalColumn: "idDichVu",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_muaDichVu_nguoiDung_idNguoiDung",
-                        column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
-                        principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -373,9 +504,9 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_thongBao", x => x.idThongBao);
                     table.ForeignKey(
-                        name: "FK_thongBao_nguoiDung_idNguoiDung",
+                        name: "FK_thongBao_AspNetUsers_idNguoiDung",
                         column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
+                        principalTable: "AspNetUsers",
                         principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -404,6 +535,12 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_baiDang", x => x.idBaiDang);
                     table.ForeignKey(
+                        name: "FK_baiDang_AspNetUsers_idNguoiDung",
+                        column: x => x.idNguoiDung,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_baiDang_danhMuc_idDanhMuc",
                         column: x => x.idDanhMuc,
                         principalTable: "danhMuc",
@@ -414,12 +551,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                         column: x => x.idDichVu,
                         principalTable: "dichVu",
                         principalColumn: "idDichVu",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_baiDang_nguoiDung_idNguoiDung",
-                        column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
-                        principalColumn: "idNguoiDung",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_baiDang_phuongXa_idPhuongXa",
@@ -482,17 +613,17 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_tinNhan", x => x.idTinNhan);
                     table.ForeignKey(
+                        name: "FK_tinNhan_AspNetUsers_idNguoiGui",
+                        column: x => x.idNguoiGui,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_tinNhan_hoiThoai_idHoiThoai",
                         column: x => x.idHoiThoai,
                         principalTable: "hoiThoai",
                         principalColumn: "idHoiThoai",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_tinNhan_nguoiDung_idNguoiGui",
-                        column: x => x.idNguoiGui,
-                        principalTable: "nguoiDung",
-                        principalColumn: "idNguoiDung",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -503,9 +634,13 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     idMuaDichVu = table.Column<int>(type: "int", nullable: false),
                     idPhuongThucTT = table.Column<int>(type: "int", nullable: false),
+                    maGiaoDichNgoai = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    maGiaoDichCongTT = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    maPhanHoiCongTT = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     tongTien = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     trangThai = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ngayTao = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ngayTao = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ngayThanhToan = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -560,17 +695,17 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_baoCao", x => x.idBaoCao);
                     table.ForeignKey(
+                        name: "FK_baoCao_AspNetUsers_idNguoiDung",
+                        column: x => x.idNguoiDung,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_baoCao_baiDang_idBaiDang",
                         column: x => x.idBaiDang,
                         principalTable: "baiDang",
                         principalColumn: "idBaiDang",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_baoCao_nguoiDung_idNguoiDung",
-                        column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
-                        principalColumn: "idNguoiDung",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -587,23 +722,91 @@ namespace ChoDoCu.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_yeuThich", x => x.idYeuThich);
                     table.ForeignKey(
+                        name: "FK_yeuThich_AspNetUsers_idNguoiDung",
+                        column: x => x.idNguoiDung,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "idNguoiDung",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_yeuThich_baiDang_idBaiDang",
                         column: x => x.idBaiDang,
                         principalTable: "baiDang",
                         principalColumn: "idBaiDang",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_yeuThich_nguoiDung_idNguoiDung",
-                        column: x => x.idNguoiDung,
-                        principalTable: "nguoiDung",
-                        principalColumn: "idNguoiDung",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_anhSanPham_idBaiDang",
                 table: "anhSanPham",
                 column: "idBaiDang");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetRoleClaims_roleId",
+                table: "AspNetRoleClaims",
+                column: "roleId");
+
+            migrationBuilder.CreateIndex(
+                name: "RoleNameIndex",
+                table: "AspNetRoles",
+                column: "normalizedName",
+                unique: true,
+                filter: "[normalizedName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserClaims_userId",
+                table: "AspNetUserClaims",
+                column: "userId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserLogins_userId",
+                table: "AspNetUserLogins",
+                column: "userId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUserRoles_roleId",
+                table: "AspNetUserRoles",
+                column: "roleId");
+
+            migrationBuilder.CreateIndex(
+                name: "EmailIndex",
+                table: "AspNetUsers",
+                column: "normalizedEmail");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_email",
+                table: "AspNetUsers",
+                column: "email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_idPhuongXa",
+                table: "AspNetUsers",
+                column: "idPhuongXa");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_idThanhPho",
+                table: "AspNetUsers",
+                column: "idThanhPho");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_soDienThoai",
+                table: "AspNetUsers",
+                column: "soDienThoai",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_userName",
+                table: "AspNetUsers",
+                column: "userName",
+                unique: true,
+                filter: "[userName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "UserNameIndex",
+                table: "AspNetUsers",
+                column: "normalizedUserName",
+                unique: true,
+                filter: "[normalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_baiDang_idDanhMuc",
@@ -698,35 +901,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                 column: "idNguoiDung");
 
             migrationBuilder.CreateIndex(
-                name: "IX_nguoiDung_email",
-                table: "nguoiDung",
-                column: "email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_nguoiDung_idPhuongXa",
-                table: "nguoiDung",
-                column: "idPhuongXa");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_nguoiDung_idThanhPho",
-                table: "nguoiDung",
-                column: "idThanhPho");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_nguoiDung_soDienThoai",
-                table: "nguoiDung",
-                column: "soDienThoai",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_nguoiDung_userName",
-                table: "nguoiDung",
-                column: "userName",
-                unique: true,
-                filter: "[userName] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_phuongXa_idThanhPho",
                 table: "phuongXa",
                 column: "idThanhPho");
@@ -773,6 +947,13 @@ namespace ChoDoCu.Infrastructure.Migrations
                 column: "idPhuongThucTT");
 
             migrationBuilder.CreateIndex(
+                name: "IX_thanhToan_maGiaoDichNgoai",
+                table: "thanhToan",
+                column: "maGiaoDichNgoai",
+                unique: true,
+                filter: "[maGiaoDichNgoai] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_thongBao_idNguoiDung_trangThai",
                 table: "thongBao",
                 columns: new[] { "idNguoiDung", "trangThai" });
@@ -806,6 +987,21 @@ namespace ChoDoCu.Infrastructure.Migrations
                 name: "anhSanPham");
 
             migrationBuilder.DropTable(
+                name: "AspNetRoleClaims");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserClaims");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserLogins");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserRoles");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
                 name: "banner");
 
             migrationBuilder.DropTable(
@@ -830,6 +1026,9 @@ namespace ChoDoCu.Infrastructure.Migrations
                 name: "yeuThich");
 
             migrationBuilder.DropTable(
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
                 name: "thuocTinhSanPham");
 
             migrationBuilder.DropTable(
@@ -845,10 +1044,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                 name: "baiDang");
 
             migrationBuilder.DropTable(
-                name: "dichVu");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "nguoiDung");
+                name: "dichVu");
 
             migrationBuilder.DropTable(
                 name: "sanPham");
