@@ -22,6 +22,10 @@ namespace ChoDoCu.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.HasSequence<int>("maTinSequence", "dbo")
+                .StartsAt(0L)
+                .HasMax(99999L);
+
             modelBuilder.Entity("ChoDoCu.Domain.Entities.AnhSanPham", b =>
                 {
                     b.Property<int>("Id")
@@ -57,6 +61,14 @@ namespace ChoDoCu.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("ChoPhepChat")
+                        .HasColumnType("bit")
+                        .HasColumnName("choPhepChat");
+
+                    b.Property<bool>("CoThuongLuong")
+                        .HasColumnType("bit")
+                        .HasColumnName("coThuongLuong");
+
                     b.Property<string>("DiaChi")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -68,6 +80,15 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("diaChiChiTiet");
+
+                    b.Property<decimal>("Gia")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("gia");
+
+                    b.Property<bool>("GiaChotNhanh")
+                        .HasColumnType("bit")
+                        .HasColumnName("giaChotNhanh");
 
                     b.Property<int>("IdDanhMuc")
                         .HasColumnType("int")
@@ -93,19 +114,68 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("idThanhPho");
 
+                    b.Property<int>("LuotXem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("luotXem");
+
+                    b.Property<string>("LyDoTuChoi")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("lyDoTuChoi");
+
+                    b.Property<string>("MaTin")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)")
+                        .HasColumnName("maTin");
+
+                    b.Property<string>("MoTa")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("moTa");
+
+                    b.Property<DateTime>("NgayCapNhat")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ngayCapNhat")
+                        .HasDefaultValueSql("GETDATE()");
+
                     b.Property<DateTime>("NgayDang")
                         .HasColumnType("datetime2")
                         .HasColumnName("ngayDang");
+
+                    b.Property<DateTime?>("NgayDayTin")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ngayDayTin");
+
+                    b.Property<DateTime?>("NgayHetHan")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ngayHetHan");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("noiDung");
 
-                    b.Property<string>("TieuDe")
+                    b.Property<string>("QuanHuyen")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
+                        .HasColumnName("quanHuyen");
+
+                    b.Property<string>("SoDienThoaiLienHe")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("soDienThoaiLienHe");
+
+                    b.Property<string>("TieuDe")
+                        .IsRequired()
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)")
                         .HasColumnName("tieuDe");
 
                     b.Property<string>("TrangThai")
@@ -132,6 +202,9 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("IdThanhPho");
+
+                    b.HasIndex("MaTin")
+                        .IsUnique();
 
                     b.HasIndex("TrangThai", "NgayDang");
 
@@ -397,6 +470,35 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("hang", (string)null);
+                });
+
+            modelBuilder.Entity("ChoDoCu.Domain.Entities.HinhAnhBaiDang", b =>
+                {
+                    b.Property<int>("IdBaiDang")
+                        .HasColumnType("int")
+                        .HasColumnName("idBaiDang");
+
+                    b.Property<int>("ThuTu")
+                        .HasColumnType("int")
+                        .HasColumnName("thuTu");
+
+                    b.Property<string>("DuongDan")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("duongDan");
+
+                    b.Property<bool>("LaAnhBia")
+                        .HasColumnType("bit")
+                        .HasColumnName("laAnhBia");
+
+                    b.Property<bool>("LaVideo")
+                        .HasColumnType("bit")
+                        .HasColumnName("laVideo");
+
+                    b.HasKey("IdBaiDang", "ThuTu");
+
+                    b.ToTable("hinhAnhBaiDang", (string)null);
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.HoiThoai", b =>
@@ -747,15 +849,15 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("idDanhMuc");
 
-                    b.Property<int>("IdDongCuThe")
+                    b.Property<int?>("IdDongCuThe")
                         .HasColumnType("int")
                         .HasColumnName("idDongCuThe");
 
-                    b.Property<int>("IdDongSanPham")
+                    b.Property<int?>("IdDongSanPham")
                         .HasColumnType("int")
                         .HasColumnName("idDongSanPham");
 
-                    b.Property<int>("IdHang")
+                    b.Property<int?>("IdHang")
                         .HasColumnType("int")
                         .HasColumnName("idHang");
 
@@ -942,6 +1044,35 @@ namespace ChoDoCu.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("BatBuoc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("batBuoc");
+
+                    b.Property<string>("DanhSachGiaTriLuaChon")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("danhSachGiaTriLuaChon")
+                        .HasDefaultValueSql("'[]'");
+
+                    b.Property<int?>("IdDanhMuc")
+                        .HasColumnType("int")
+                        .HasColumnName("idDanhMuc");
+
+                    b.Property<int?>("IdThuocTinhCha")
+                        .HasColumnType("int")
+                        .HasColumnName("idThuocTinhCha");
+
+                    b.Property<string>("KieuDuLieu")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Text")
+                        .HasColumnName("kieuDuLieu");
+
                     b.Property<DateTime>("NgayTao")
                         .HasColumnType("datetime2")
                         .HasColumnName("ngayTao");
@@ -952,6 +1083,12 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("tenThuocTinh");
 
+                    b.Property<int>("ThuTu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("thuTu");
+
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -959,6 +1096,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnName("trangThai");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdDanhMuc");
+
+                    b.HasIndex("IdThuocTinhCha");
 
                     b.ToTable("thuocTinhSanPham", (string)null);
                 });
@@ -1308,6 +1449,17 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Navigation("Hang");
                 });
 
+            modelBuilder.Entity("ChoDoCu.Domain.Entities.HinhAnhBaiDang", b =>
+                {
+                    b.HasOne("ChoDoCu.Domain.Entities.BaiDang", "BaiDang")
+                        .WithMany("HinhAnhBaiDangs")
+                        .HasForeignKey("IdBaiDang")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BaiDang");
+                });
+
             modelBuilder.Entity("ChoDoCu.Domain.Entities.HoiThoai", b =>
                 {
                     b.HasOne("ChoDoCu.Domain.Entities.NguoiDung", "NguoiDung1")
@@ -1396,20 +1548,17 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.HasOne("ChoDoCu.Domain.Entities.DongCuThe", "DongCuThe")
                         .WithMany("SanPhams")
                         .HasForeignKey("IdDongCuThe")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ChoDoCu.Domain.Entities.DongSanPham", "DongSanPham")
                         .WithMany("SanPhams")
                         .HasForeignKey("IdDongSanPham")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ChoDoCu.Domain.Entities.Hang", "Hang")
                         .WithMany("SanPhams")
                         .HasForeignKey("IdHang")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DanhMuc");
 
@@ -1423,7 +1572,7 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.SanPhamThuocTinh", b =>
                 {
                     b.HasOne("ChoDoCu.Domain.Entities.SanPham", "SanPham")
-                        .WithMany()
+                        .WithMany("SanPhamThuocTinhs")
                         .HasForeignKey("IdSanPham")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1469,6 +1618,23 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Navigation("NguoiDung");
                 });
 
+            modelBuilder.Entity("ChoDoCu.Domain.Entities.ThuocTinhSanPham", b =>
+                {
+                    b.HasOne("ChoDoCu.Domain.Entities.DanhMuc", "DanhMuc")
+                        .WithMany()
+                        .HasForeignKey("IdDanhMuc")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ChoDoCu.Domain.Entities.ThuocTinhSanPham", "ThuocTinhCha")
+                        .WithMany("ThuocTinhCons")
+                        .HasForeignKey("IdThuocTinhCha")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DanhMuc");
+
+                    b.Navigation("ThuocTinhCha");
+                });
+
             modelBuilder.Entity("ChoDoCu.Domain.Entities.TinNhan", b =>
                 {
                     b.HasOne("ChoDoCu.Domain.Entities.HoiThoai", "HoiThoai")
@@ -1491,7 +1657,7 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.YeuThich", b =>
                 {
                     b.HasOne("ChoDoCu.Domain.Entities.BaiDang", "BaiDang")
-                        .WithMany()
+                        .WithMany("YeuThichs")
                         .HasForeignKey("IdBaiDang")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1561,6 +1727,10 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.BaiDang", b =>
                 {
                     b.Navigation("AnhSanPhams");
+
+                    b.Navigation("HinhAnhBaiDangs");
+
+                    b.Navigation("YeuThichs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.DanhMuc", b =>
@@ -1618,6 +1788,8 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.SanPham", b =>
                 {
                     b.Navigation("BaiDang");
+
+                    b.Navigation("SanPhamThuocTinhs");
                 });
 
             modelBuilder.Entity("ChoDoCu.Domain.Entities.ThanhPho", b =>
@@ -1628,6 +1800,8 @@ namespace ChoDoCu.Infrastructure.Migrations
             modelBuilder.Entity("ChoDoCu.Domain.Entities.ThuocTinhSanPham", b =>
                 {
                     b.Navigation("SanPhamThuocTinhs");
+
+                    b.Navigation("ThuocTinhCons");
                 });
 #pragma warning restore 612, 618
         }

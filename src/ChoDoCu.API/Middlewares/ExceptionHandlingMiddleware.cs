@@ -38,6 +38,7 @@ public class ExceptionHandlingMiddleware
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
             NotFoundException => (StatusCodes.Status404NotFound, ex.Message, (object?)null),
+            ForbiddenException => (StatusCodes.Status403Forbidden, ex.Message, (object?)null),
             DomainException => (StatusCodes.Status400BadRequest, ex.Message, (object?)null),
             _ => (StatusCodes.Status500InternalServerError, "Lỗi hệ thống, vui lòng thử lại sau.", (object?)null)
         };

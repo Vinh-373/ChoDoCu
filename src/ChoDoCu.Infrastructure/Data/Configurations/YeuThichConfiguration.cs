@@ -14,7 +14,7 @@ public class YeuThichConfiguration : IEntityTypeConfiguration<YeuThich>
 
         builder.HasOne(x => x.NguoiDung).WithMany(x => x.YeuThichs)
             .HasForeignKey(x => x.IdNguoiDung).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(x => x.BaiDang).WithMany()
+        builder.HasOne(x => x.BaiDang).WithMany(x => x.YeuThichs)
             .HasForeignKey(x => x.IdBaiDang).OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => new { x.IdNguoiDung, x.IdBaiDang }).IsUnique();   // 1 người chỉ thích 1 bài 1 lần

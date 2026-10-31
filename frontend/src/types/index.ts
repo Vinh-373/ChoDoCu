@@ -31,7 +31,7 @@ export interface HoSoNguoiDung {
   id: number;
   hoTen: string;
   email: string;
-  soDienThoai: string;
+  soDienThoai: string | null;
   ngaySinh: string | null; // yyyy-MM-dd
   gioiTinh: string | null; // "Nam" | "Nữ" | "Khác" hoặc giá trị khác do BE trả (vd. chưa xác định)
   tenGianHang?: string | null;

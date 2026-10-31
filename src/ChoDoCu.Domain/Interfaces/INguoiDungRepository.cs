@@ -7,6 +7,9 @@ public interface INguoiDungRepository
 {
     Task AddAsync(NguoiDung nguoiDung);
     Task<NguoiDung?> GetByIdAsync(int id);
+    Task<bool> TryTruLuotDangAsync(int idNguoiDung);
+    Task<bool> TryTruLuotDayAsync(int idNguoiDung);
+    Task<int> CongLuotDangAsync(int idNguoiDung);
     void Update(NguoiDung nguoiDung);
     void Remove(NguoiDung nguoiDung);
 
