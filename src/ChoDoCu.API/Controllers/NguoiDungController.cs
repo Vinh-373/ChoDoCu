@@ -27,6 +27,23 @@ public class NguoiDungController : ControllerBase
     public async Task<IActionResult> CapNhatMe(CapNhatHoSoRequest request)
         => Ok(await _service.CapNhatHoSoAsync(GetUserId(), request));
 
+    // ----- Đổi số điện thoại: mã xác nhận gửi qua email -----
+
+    /// <summary>Bước 1: gửi mã 6 chữ số tới email của tài khoản.</summary>
+    [Authorize]
+    [HttpPost("me/doi-so-dien-thoai/yeu-cau")]
+    public async Task<IActionResult> YeuCauDoiSoDienThoai(YeuCauDoiSoDienThoaiRequest request)
+    {
+        await _service.YeuCauDoiSoDienThoaiAsync(GetUserId(), request);
+        return Ok(new { message = "Đã gửi mã xác nhận tới email của bạn." });
+    }
+
+    /// <summary>Bước 2: nhập mã để đổi số; trả về hồ sơ đã cập nhật.</summary>
+    [Authorize]
+    [HttpPost("me/doi-so-dien-thoai/xac-nhan")]
+    public async Task<IActionResult> XacNhanDoiSoDienThoai(XacNhanDoiSoDienThoaiRequest request)
+        => Ok(await _service.XacNhanDoiSoDienThoaiAsync(GetUserId(), request));
+
     // ----- Quản trị -----
 
     /// <summary>GET /api/nguoi-dung?keyword=an&amp;trangThai=Khoa&amp;role=User&amp;page=1&amp;pageSize=20</summary>

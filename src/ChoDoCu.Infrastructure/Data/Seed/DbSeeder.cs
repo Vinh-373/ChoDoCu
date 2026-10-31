@@ -20,6 +20,7 @@ public static class DbSeeder
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         await context.Database.MigrateAsync();
+        await CapNhatMaTinCuAsync(context);
 
         // 1. Seed thành phố và phường xã
         // ===== 1. Seed Role + quyền (lưu thành claim trong AspNetRoleClaims) =====
@@ -197,6 +198,8 @@ public static class DbSeeder
 
             await context.SaveChangesAsync();
         }
+
+        await SeedThuocTinhOtoAsync(context);
 
         // 6. Seed dịch vụ
         if (!await context.DichVus.AnyAsync())
@@ -617,6 +620,73 @@ public static class DbSeeder
         return user;
     }
 
+    private static async Task CapNhatMaTinCuAsync(ApplicationDbContext context)
+    {
+        var idsToFix = (await context.BaiDangs
+            .AsNoTracking()
+            .Where(x => x.MaTin == "CD00000")
+            .Select(x => x.Id)
+            .ToListAsync())
+            .ToHashSet();
+
+        if (idsToFix.Count == 0)
+            return;
+
+        while (true)
+        {
+            var ids = idsToFix.ToArray();
+            if (ids.Any(id => id is <= 0 or > 99_999))
+                throw new InvalidOperationException("Không thể tạo mã tin 5 chữ số cho một bài đăng có ID ngoài khoảng 1 đến 99999.");
+
+            var maTinsMucTieu = ids.Select(id => $"CD{id:D5}").ToArray();
+            var idBiTrung = await context.BaiDangs
+                .AsNoTracking()
+                .Where(x => maTinsMucTieu.Contains(x.MaTin))
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            if (!idBiTrung.Any(idsToFix.Add))
+                break;
+        }
+
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        string? prefixTam = null;
+        foreach (var prefix in new[] { "T", "~", "!", "@", "#" })
+        {
+            var maTinsTam = idsToFix.Select(id => $"{prefix}{id:D5}").ToArray();
+            if (!await context.BaiDangs.AsNoTracking().AnyAsync(x => maTinsTam.Contains(x.MaTin)))
+            {
+                prefixTam = prefix;
+                break;
+            }
+        }
+
+        if (prefixTam is null)
+            throw new InvalidOperationException("Không tìm được mã tạm duy nhất để cập nhật mã tin cũ.");
+
+        foreach (var id in idsToFix)
+        {
+            var maTinTam = $"{prefixTam}{id:D5}";
+            var rowsUpdated = await context.BaiDangs
+                .Where(x => x.Id == id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.MaTin, maTinTam));
+            if (rowsUpdated != 1)
+                throw new InvalidOperationException($"Không thể cập nhật mã tạm cho bài đăng id={id}.");
+        }
+
+        foreach (var id in idsToFix)
+        {
+            var maTin = $"CD{id:D5}";
+            var rowsUpdated = await context.BaiDangs
+                .Where(x => x.Id == id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.MaTin, maTin));
+            if (rowsUpdated != 1)
+                throw new InvalidOperationException($"Không thể cập nhật mã tin cho bài đăng id={id}.");
+        }
+
+        await transaction.CommitAsync();
+    }
+
     private static async Task SeedPhanQuyenAsync(RoleManager<IdentityRole<int>> roleManager)
     {
         // Role
@@ -650,5 +720,133 @@ public static class DbSeeder
             foreach (var ma in maQuyen.Where(m => !daCo.Contains(m)))
                 await roleManager.AddClaimAsync(role, new Claim(AppPermissions.ClaimType, ma));
         }
+    }
+
+    private static async Task SeedThuocTinhOtoAsync(ApplicationDbContext context)
+    {
+        var xeCo = await context.DanhMucs
+            .FirstOrDefaultAsync(x => x.IdDanhMucCha == null && x.TenDanhMuc == "Xe cộ");
+        if (xeCo is null)
+        {
+            xeCo = new DanhMuc { TenDanhMuc = "Xe cộ" };
+            context.DanhMucs.Add(xeCo);
+            await context.SaveChangesAsync();
+        }
+
+        var oto = await context.DanhMucs
+            .FirstOrDefaultAsync(x => x.IdDanhMucCha == xeCo.Id && x.TenDanhMuc == "Ô tô");
+        if (oto is null)
+        {
+            oto = new DanhMuc { IdDanhMucCha = xeCo.Id, TenDanhMuc = "Ô tô" };
+            context.DanhMucs.Add(oto);
+            await context.SaveChangesAsync();
+        }
+
+        var hangVaDong = new Dictionary<string, string[]>
+        {
+            ["Toyota"] = ["Vios", "Corolla Cross", "Camry", "Fortuner"],
+            ["Honda"] = ["City", "Civic", "CR-V", "HR-V"],
+            ["Hyundai"] = ["Accent", "Creta", "Tucson", "Santa Fe"],
+            ["Kia"] = ["Morning", "Seltos", "Sportage", "Carnival"],
+            ["Mazda"] = ["Mazda2", "Mazda3", "CX-5", "CX-8"],
+            ["VinFast"] = ["VF 3", "VF 5", "VF 6", "VF 8", "VF 9"]
+        };
+
+        var tenHangs = hangVaDong.Keys.ToArray();
+        var hangsHienCo = await context.Hangs
+            .Where(x => tenHangs.Contains(x.TenHang!))
+            .ToListAsync();
+        var hangTheoTen = hangsHienCo
+            .GroupBy(x => x.TenHang!)
+            .ToDictionary(x => x.Key, x => x.First());
+
+        foreach (var tenHang in tenHangs.Where(x => !hangTheoTen.ContainsKey(x)))
+        {
+            var hang = new Hang { TenHang = tenHang };
+            context.Hangs.Add(hang);
+            hangTheoTen.Add(tenHang, hang);
+        }
+
+        await context.SaveChangesAsync();
+
+        var hangIds = hangTheoTen.Values.Select(x => x.Id).ToArray();
+        var dongHienCo = await context.DongSanPhams
+            .Where(x => x.IdDanhMuc == oto.Id && hangIds.Contains(x.IdHang))
+            .ToListAsync();
+        foreach (var (tenHang, tenDongs) in hangVaDong)
+        {
+            var hang = hangTheoTen[tenHang];
+            foreach (var tenDong in tenDongs)
+            {
+                if (dongHienCo.Any(x => x.IdHang == hang.Id && x.TenDongSanPham == tenDong))
+                    continue;
+
+                var dong = new DongSanPham
+                {
+                    TenDongSanPham = tenDong,
+                    IdHang = hang.Id,
+                    IdDanhMuc = oto.Id
+                };
+                context.DongSanPhams.Add(dong);
+                dongHienCo.Add(dong);
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        var thuocTinhsHienCo = await context.ThuocTinhSanPhams
+            .Where(x => x.IdDanhMuc == oto.Id)
+            .ToListAsync();
+        var hangXe = thuocTinhsHienCo.FirstOrDefault(x => x.TenThuocTinh == "Hãng xe");
+        if (hangXe is null)
+        {
+            hangXe = new ThuocTinhSanPham
+            {
+                IdDanhMuc = oto.Id,
+                TenThuocTinh = "Hãng xe",
+                KieuDuLieu = KieuDuLieuThuocTinh.LuaChon,
+                BatBuoc = true,
+                ThuTu = 1
+            };
+            context.ThuocTinhSanPhams.Add(hangXe);
+            thuocTinhsHienCo.Add(hangXe);
+        }
+
+        await context.SaveChangesAsync();
+
+        var thuocTinhCon = new (string Ten, KieuDuLieuThuocTinh KieuDuLieu, bool BatBuoc, int ThuTu, List<string> LuaChon)[]
+        {
+            ("Dòng xe", KieuDuLieuThuocTinh.LuaChon, true, 2, new()),
+            ("Năm sản xuất", KieuDuLieuThuocTinh.So, true, 3,
+                Enumerable.Range(2000, DateTime.Now.Year - 1999).Select(x => x.ToString()).ToList()),
+            ("Số km", KieuDuLieuThuocTinh.So, true, 4, new()),
+            ("Hộp số", KieuDuLieuThuocTinh.LuaChon, true, 5, ["Tự động", "Số sàn"]),
+            ("Nhiên liệu", KieuDuLieuThuocTinh.LuaChon, true, 6, ["Xăng", "Dầu", "Điện"]),
+            ("Số chỗ ngồi", KieuDuLieuThuocTinh.LuaChon, true, 7, ["2", "4", "5", "7", "9", "16"]),
+            ("Tình trạng", KieuDuLieuThuocTinh.LuaChon, true, 8, ["Đã sử dụng", "Mới 100%"])
+        };
+
+        var dongXe = thuocTinhsHienCo.FirstOrDefault(x => x.TenThuocTinh == "Dòng xe");
+        if (dongXe is not null && dongXe.IdThuocTinhCha != hangXe.Id)
+            dongXe.IdThuocTinhCha = hangXe.Id;
+
+        foreach (var (ten, kieuDuLieu, batBuoc, thuTu, luaChon) in thuocTinhCon)
+        {
+            if (thuocTinhsHienCo.Any(x => x.TenThuocTinh == ten))
+                continue;
+
+            context.ThuocTinhSanPhams.Add(new ThuocTinhSanPham
+            {
+                IdDanhMuc = oto.Id,
+                IdThuocTinhCha = ten == "Dòng xe" ? hangXe.Id : null,
+                TenThuocTinh = ten,
+                KieuDuLieu = kieuDuLieu,
+                BatBuoc = batBuoc,
+                ThuTu = thuTu,
+                DanhSachGiaTriLuaChon = luaChon
+            });
+        }
+
+        await context.SaveChangesAsync();
     }
 }

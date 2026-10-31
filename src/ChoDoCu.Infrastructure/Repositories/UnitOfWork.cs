@@ -1,5 +1,6 @@
 using ChoDoCu.Domain.Interfaces;
 using ChoDoCu.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChoDoCu.Infrastructure.Repositories;
 
@@ -47,4 +48,20 @@ public class UnitOfWork : IUnitOfWork
     public IBannerRepository Banners { get; }
 
     public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+
+    public async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> operation)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var result = await operation();
+            await transaction.CommitAsync();
+            return result;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
 }

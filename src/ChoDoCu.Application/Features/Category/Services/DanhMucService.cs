@@ -29,6 +29,45 @@ public class DanhMucService : IDanhMucService
         return goc.Select(ToResponse).ToList();
     }
 
+    public async Task<List<ThuocTinhDanhMucResponse>> GetThuocTinhDanhMucAsync(int idDanhMuc, int? idHang)
+    {
+        _ = await _uow.DanhMucs.GetByIdAsync(idDanhMuc)
+            ?? throw new NotFoundException(nameof(Domain.Entities.DanhMuc), idDanhMuc);
+
+        var thuocTinhs = await _uow.DanhMucs.GetThuocTinhDanhMucAsync(idDanhMuc);
+        var idThuocTinhHang = thuocTinhs
+            .FirstOrDefault(x => x.TenThuocTinh == "Hãng xe")?.Id;
+        var hangs = idThuocTinhHang.HasValue
+            ? await _uow.DanhMucs.GetHangsDanhMucAsync(idDanhMuc)
+            : Array.Empty<Hang>();
+        var dongSanPhams = idThuocTinhHang.HasValue
+            && thuocTinhs.Any(x => x.IdThuocTinhCha == idThuocTinhHang)
+            ? await _uow.DanhMucs.GetDongSanPhamsDanhMucAsync(idDanhMuc, idHang)
+            : Array.Empty<DongSanPham>();
+
+        return thuocTinhs.Select(thuocTinh =>
+        {
+            IReadOnlyList<ThuocTinhLuaChonResponse> luaChons = thuocTinh.Id == idThuocTinhHang
+                ? hangs.Select(x => new ThuocTinhLuaChonResponse(
+                    x.Id.ToString(), x.TenHang ?? string.Empty)).ToList()
+                : idThuocTinhHang.HasValue && thuocTinh.IdThuocTinhCha == idThuocTinhHang
+                    ? dongSanPhams.Select(x => new ThuocTinhLuaChonResponse(
+                        x.Id.ToString(), x.TenDongSanPham ?? string.Empty, x.IdHang)).ToList()
+                    : thuocTinh.DanhSachGiaTriLuaChon
+                        .Select(x => new ThuocTinhLuaChonResponse(x, x))
+                        .ToList();
+
+            return new ThuocTinhDanhMucResponse(
+                thuocTinh.Id,
+                thuocTinh.TenThuocTinh,
+                thuocTinh.KieuDuLieu.ToString(),
+                thuocTinh.BatBuoc,
+                luaChons,
+                thuocTinh.ThuTu,
+                thuocTinh.IdThuocTinhCha);
+        }).ToList();
+    }
+
     public async Task<DanhMucResponse> TaoAsync(TaoDanhMucRequest request)
     {
         await _taoValidator.ValidateAndThrowAsync(request);

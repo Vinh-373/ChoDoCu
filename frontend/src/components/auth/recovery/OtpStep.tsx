@@ -1,23 +1,23 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { authApi } from "../../../api/auth";
 import { getErrorMessage } from "../../../utils/error";
+import { AuthField } from "../AuthField";
 import FormAlert from "../FormAlert";
 import SubmitButton from "../SubmitButton";
-import OtpInput from "./OtpInput";
+import InfoNote from "./InfoNote";
 import RecoveryHeading from "./RecoveryHeading";
 
-const OTP_LENGTH = 6;
 const RESEND_SECONDS = 60;
 
 interface Props {
   email: string;
-  onVerified: (resetToken: string) => void;
+  onVerified: (code: string) => void;
   onChangeEmail: () => void;
 }
 
-/** Bước 2: nhập mã OTP; có đếm ngược trước khi cho gửi lại. */
+/** Bước 2: nhập mã 6 số nhận qua email; cho gửi lại sau 60 giây. */
 export default function OtpStep({ email, onVerified, onChangeEmail }: Props) {
-  const [otp, setOtp] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,15 +31,15 @@ export default function OtpStep({ email, onVerified, onChangeEmail }: Props) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (otp.length < OTP_LENGTH) return setError(`Hãy nhập đủ ${OTP_LENGTH} chữ số.`);
+    if (!/^\d{6}$/.test(code)) return setError("Mã xác nhận gồm 6 chữ số.");
     setError("");
     setNotice("");
     setBusy(true);
     try {
-      const { resetToken } = await authApi.xacThucOtp(email, otp);
-      onVerified(resetToken);
+      await authApi.xacNhanMaDatLai(email, code);
+      onVerified(code);
     } catch (err) {
-      setError(getErrorMessage(err, "Mã xác thực không đúng hoặc đã hết hạn."));
+      setError(getErrorMessage(err, "Mã xác nhận không đúng hoặc đã hết hạn."));
     } finally {
       setBusy(false);
     }
@@ -50,9 +50,9 @@ export default function OtpStep({ email, onVerified, onChangeEmail }: Props) {
     setNotice("");
     try {
       await authApi.quenMatKhau(email);
-      setOtp("");
+      setCode("");
       setCooldown(RESEND_SECONDS);
-      setNotice("Đã gửi lại mã mới. Mã cũ không còn dùng được.");
+      setNotice("Đã gửi mã mới. Mã cũ không còn dùng được.");
     } catch (err) {
       setError(getErrorMessage(err, "Chưa gửi lại được mã."));
     }
@@ -62,19 +62,24 @@ export default function OtpStep({ email, onVerified, onChangeEmail }: Props) {
     <>
       <RecoveryHeading
         icon="mark_email_read"
-        title="Nhập mã xác thực"
-        subtitle={`Chúng tôi đã gửi mã ${OTP_LENGTH} chữ số tới ${email}. Hãy kiểm tra cả hộp thư rác.`}
+        title="Nhập mã xác nhận"
+        subtitle={`Nếu ${email} đã đăng ký tài khoản, chúng tôi vừa gửi mã 6 số tới đó.`}
       />
-      <form className="w-full flex flex-col gap-space-lg" onSubmit={submit}>
-        <OtpInput
-          value={otp}
-          onChange={(v) => {
-            setOtp(v);
-            setError(""); // sửa mã thì bỏ thông báo lỗi cũ
-          }}
-          length={OTP_LENGTH}
-          disabled={busy}
+      <form className="w-full text-left flex flex-col gap-space-lg" onSubmit={submit} noValidate>
+        <AuthField
+          id="recovery-code"
+          label="Mã xác nhận"
+          icon="pin"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          placeholder="123456"
+          required
+          autoFocus
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
         />
+        <InfoNote>Mã có hiệu lực trong vài phút. Hãy kiểm tra cả hộp thư rác nếu chưa thấy email.</InfoNote>
         {error && <FormAlert message={error} />}
         {notice && (
           <p role="status" className="m-0 rounded-lg bg-secondary-container/40 text-on-secondary-container px-space-md py-space-sm font-caption-bold text-caption-bold">

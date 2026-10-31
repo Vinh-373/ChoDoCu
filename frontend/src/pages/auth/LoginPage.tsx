@@ -14,7 +14,7 @@ import { getErrorMessage } from "../../utils/error";
 /** Trang con của AuthLayout: khung hai cột do AuthLayout lo, ở đây chỉ có form. */
 export default function LoginPage() {
   useDocumentTitle("Đăng nhập");
-  const { user, login } = useAuth();
+  const { user, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? "/";
@@ -37,6 +37,16 @@ export default function LoginPage() {
       setError(getErrorMessage(err, "Đăng nhập không thành công."));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const onGoogle = async (idToken: string) => {
+    setError("");
+    try {
+      await loginWithGoogle(idToken);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err, "Đăng nhập bằng Google không thành công."));
     }
   };
 
@@ -78,7 +88,7 @@ export default function LoginPage() {
       <AuthSwitchPrompt text="Quên mật khẩu?" linkText="Khôi phục ngay" to="/quen-mat-khau" />
 
       <AuthDivider text="Hoặc tiếp tục với" />
-      <SocialLoginButtons />
+      <SocialLoginButtons onGoogleCredential={(t) => void onGoogle(t)} />
 
       <AuthSwitchPrompt text="Chưa có tài khoản?" linkText="Đăng ký ngay" to="/dang-ky" />
     </>

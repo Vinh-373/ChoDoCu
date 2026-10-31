@@ -10,13 +10,13 @@ import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 
 type Step = 1 | 2 | 3 | 4;
 
-/** Khôi phục mật khẩu 4 bước: email → OTP → mật khẩu mới → hoàn tất. Mỗi bước là một component ở components/auth/recovery. */
+/** Khôi phục mật khẩu 4 bước: email → mã 6 số → mật khẩu mới → hoàn tất. Mỗi bước là một component ở components/auth/recovery. */
 export default function ForgotPasswordPage() {
   useDocumentTitle("Khôi phục mật khẩu");
   const { user } = useAuth();
   const [step, setStep] = useState<Step>(1);
   const [email, setEmail] = useState("");
-  const [resetToken, setResetToken] = useState("");
+  const [code, setCode] = useState("");
 
   if (user) return <Navigate to="/" replace />;
 
@@ -34,14 +34,14 @@ export default function ForgotPasswordPage() {
       {step === 2 && (
         <OtpStep
           email={email}
-          onVerified={(token) => {
-            setResetToken(token);
+          onVerified={(value) => {
+            setCode(value);
             setStep(3);
           }}
           onChangeEmail={() => setStep(1)}
         />
       )}
-      {step === 3 && <NewPasswordStep email={email} resetToken={resetToken} onDone={() => setStep(4)} />}
+      {step === 3 && <NewPasswordStep email={email} code={code} onDone={() => setStep(4)} />}
       {step === 4 && <DoneStep />}
     </RecoveryLayout>
   );

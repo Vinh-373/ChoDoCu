@@ -14,4 +14,6 @@ public interface IAuthService
     Task QuenMatKhauAsync(QuenMatKhauRequest request);
 
     Task<Result<bool>> DatLaiMatKhauAsync(DatLaiMatKhauRequest request);
+    Task<Result<AuthResponse>> DangNhapGoogleAsync(DangNhapGoogleRequest request);
+    Task<Result<bool>> XacNhanMaDatLaiAsync(XacNhanMaDatLaiRequest request);
 }

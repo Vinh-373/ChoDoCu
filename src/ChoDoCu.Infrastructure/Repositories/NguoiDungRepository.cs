@@ -25,6 +25,21 @@ public class NguoiDungRepository : INguoiDungRepository
         return await _context.Users.FindAsync(id);
     }
 
+    public async Task<bool> TryTruLuotDangAsync(int idNguoiDung) =>
+        await _context.Users
+            .Where(x => x.Id == idNguoiDung && x.LuotDang > 0)
+            .ExecuteUpdateAsync(updates => updates.SetProperty(x => x.LuotDang, x => x.LuotDang - 1)) == 1;
+
+    public async Task<bool> TryTruLuotDayAsync(int idNguoiDung) =>
+        await _context.Users
+            .Where(x => x.Id == idNguoiDung && x.LuotDay > 0)
+            .ExecuteUpdateAsync(updates => updates.SetProperty(x => x.LuotDay, x => x.LuotDay - 1)) == 1;
+
+    public Task<int> CongLuotDangAsync(int idNguoiDung) =>
+        _context.Users
+            .Where(x => x.Id == idNguoiDung)
+            .ExecuteUpdateAsync(updates => updates.SetProperty(x => x.LuotDang, x => x.LuotDang + 1));
+
     public void Update(NguoiDung nguoiDung)
     {
         _context.Users.Update(nguoiDung);

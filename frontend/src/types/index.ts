@@ -31,9 +31,9 @@ export interface HoSoNguoiDung {
   id: number;
   hoTen: string;
   email: string;
-  soDienThoai: string;
+  soDienThoai: string | null;
   ngaySinh: string | null; // yyyy-MM-dd
-  gioiTinh: "Nam" | "Nữ" | "Khác" | null;
+  gioiTinh: string | null; // "Nam" | "Nữ" | "Khác" hoặc giá trị khác do BE trả (vd. chưa xác định)
   tenGianHang?: string | null;
   idThanhPho?: number | null;
   idPhuongXa?: number | null;
@@ -42,9 +42,8 @@ export interface HoSoNguoiDung {
   soDienThoaiDaXacThuc?: boolean;
   cccdDaMa?: string | null; // đã che bớt, ví dụ 079095******
 }
-export type CapNhatHoSoRequest = Pick<HoSoNguoiDung, "hoTen" | "soDienThoai" | "ngaySinh" | "gioiTinh"> &
-  Partial<Pick<HoSoNguoiDung, "tenGianHang" | "idThanhPho" | "idPhuongXa" | "diaChiChiTiet" | "gioiThieu">>;
-
+export type CapNhatHoSoRequest = Pick<HoSoNguoiDung, "hoTen" | "soDienThoai" | "ngaySinh"> &
+  Partial<Pick<HoSoNguoiDung, "gioiTinh" | "tenGianHang" | "idThanhPho" | "idPhuongXa" | "diaChiChiTiet" | "gioiThieu">>;
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;

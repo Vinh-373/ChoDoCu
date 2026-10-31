@@ -8,6 +8,7 @@ public static class BaiDangMapping
 {
     public static BaiDangResponse ToResponse(this BaiDang b) => new(
         b.Id,
+        b.MaTin,
         b.TieuDe,
         b.NoiDung,
         b.SanPham.TenSanPham,
@@ -20,5 +21,7 @@ public static class BaiDangMapping
         b.NguoiDung.HoTen,
         b.DanhMuc.TenDanhMuc,
         b.ThanhPho.TenThanhPho,
-        b.AnhSanPhams.Select(a => a.Url).ToList());
+        b.HinhAnhBaiDangs.OrderBy(h => h.ThuTu).Select(h => h.DuongDan)
+            .Concat(b.AnhSanPhams.Select(a => a.Url))
+            .ToList());
 }

@@ -12,7 +12,7 @@ public class SanPhamThuocTinhConfiguration : IEntityTypeConfiguration<SanPhamThu
         builder.HasKey(x => new { x.IdSanPham, x.IdThuocTinh });   // khóa chính ghép
         builder.Property(x => x.GiaTri).HasMaxLength(255);
 
-        builder.HasOne(x => x.SanPham).WithMany()
+        builder.HasOne(x => x.SanPham).WithMany(x => x.SanPhamThuocTinhs)
             .HasForeignKey(x => x.IdSanPham).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.ThuocTinh).WithMany(x => x.SanPhamThuocTinhs)
             .HasForeignKey(x => x.IdThuocTinh).OnDelete(DeleteBehavior.Restrict);

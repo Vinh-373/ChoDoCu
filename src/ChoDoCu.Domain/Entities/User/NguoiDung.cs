@@ -11,6 +11,9 @@ namespace ChoDoCu.Domain.Entities;
 public class NguoiDung : IdentityUser<int>
 {
     public string? AnhNguoiDung { get; set; }
+        public string? TenGianHang { get; set; }
+    public string? DiaChiChiTiet { get; set; }
+    public string? GioiThieu { get; set; }
 
     public int? IdThanhPho { get; set; }
     public int? IdPhuongXa { get; set; }
