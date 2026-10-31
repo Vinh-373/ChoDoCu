@@ -98,7 +98,7 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
                 .OrderByDescending(b => b.UuTien.HasValue && b.UuTien.Value > now)
                 .ThenByDescending(b => b.NgayDayTin ?? b.NgayDang),
             "moiNhat" => query
-                .OrderByDescending(b => b.NgayDayTin ?? b.NgayDang),
+                .OrderByDescending(b => b.NgayDang),
             "giaTang" => query
                 .OrderBy(b => b.Gia),
             "giaGiam" => query

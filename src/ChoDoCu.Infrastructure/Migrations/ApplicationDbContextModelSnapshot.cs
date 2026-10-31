@@ -69,6 +69,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("coThuongLuong");
 
+                    b.Property<bool>("DaXoa")
+                        .HasColumnType("bit")
+                        .HasColumnName("daXoa");
+
                     b.Property<string>("DiaChi")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -154,6 +158,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Property<DateTime?>("NgayHetHan")
                         .HasColumnType("datetime2")
                         .HasColumnName("ngayHetHan");
+
+                    b.Property<DateTime?>("NgayXoa")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ngayXoa");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
