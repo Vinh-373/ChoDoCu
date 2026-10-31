@@ -28,7 +28,7 @@ public class DatLaiMatKhauRequestValidator : AbstractValidator<DatLaiMatKhauRequ
     public DatLaiMatKhauRequestValidator()
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
-        RuleFor(x => x.Token).NotEmpty();
+        RuleFor(x => x.MaOTP).NotEmpty();
         RuleFor(x => x.MatKhauMoi).MatKhauHopLe();
     }
 }

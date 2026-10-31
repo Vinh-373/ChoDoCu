@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { nguoiDungApi } from "../../api/nguoiDung";
+import ChangePhoneDialog from "../../components/account/ChangePhoneDialog";
 import AddressFields from "../../components/account/AddressFields";
 import { Card, SectionTitle, TextArea, TextInput } from "../../components/account/FormControls";
 import FormAlert from "../../components/auth/FormAlert";
@@ -34,7 +35,8 @@ const toForm = (p: Partial<HoSoNguoiDung>): FormState => ({
   diaChiChiTiet: p.diaChiChiTiet ?? "",
   gioiThieu: p.gioiThieu ?? "",
   gioiTinh: p.gioiTinh ?? "",
-  ngaySinh: (p.ngaySinh ?? "").slice(0, 10),
+  // Tài khoản tạo bằng Google chưa có ngày sinh: BE lưu tạm 1900-01-01, hiển thị như chưa nhập.
+  ngaySinh: (p.ngaySinh ?? "").startsWith("1900-01-01") ? "" : (p.ngaySinh ?? "").slice(0, 10),
 });
 
 /** Hồ sơ cá nhân & cài đặt tài khoản (/tai-khoan). */
@@ -44,6 +46,7 @@ export default function ProfilePage() {
   const toast = useToast();
   const { data: profile, loading, error } = useFetch(() => nguoiDungApi.layHoSo(), []);
   const [saved, setSaved] = useState<Partial<HoSoNguoiDung>>({});
+  const [phoneOpen, setPhoneOpen] = useState(false);
   const [form, setForm] = useState<FormState>(toForm({ hoTen: user?.hoTen }));
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,14 +68,16 @@ export default function ProfilePage() {
     try {
       const updated = await nguoiDungApi.capNhatHoSo({
         hoTen: form.hoTen.trim(),
+        soDienThoai: saved.soDienThoai ?? "", // BE bắt buộc; số điện thoại chưa sửa được ở đây nên gửi lại số hiện có
         tenGianHang: form.tenGianHang.trim() || null,
-        soDienThoai: saved.soDienThoai ?? null,
         idThanhPho: form.idThanhPho ? Number(form.idThanhPho) : null,
         idPhuongXa: form.idPhuongXa ? Number(form.idPhuongXa) : null,
         diaChiChiTiet: form.diaChiChiTiet.trim() || null,
         gioiThieu: form.gioiThieu.trim() || null,
-        gioiTinh: (GENDERS as readonly string[]).includes(form.gioiTinh) ? (form.gioiTinh as HoSoNguoiDung["gioiTinh"]) : null,
-        ngaySinh: form.ngaySinh || null,
+        // Chưa chọn giới tính thì lưu "Chưa XĐ" (khớp giá trị trong DB).
+        gioiTinh: (GENDERS as readonly string[]).includes(form.gioiTinh) ? form.gioiTinh : "Chưa XĐ",
+        // Không chọn ngày sinh thì giữ nguyên giá trị BE đang lưu (BE bắt buộc có ngày sinh).
+        ngaySinh: form.ngaySinh || saved.ngaySinh?.slice(0, 10) || null,
       });
       const next = updated?.hoTen ? updated : { ...saved, hoTen: form.hoTen.trim() };
       setSaved(next);
@@ -89,6 +94,7 @@ export default function ProfilePage() {
   if (loading) return <Spinner />;
 
   return (
+    <>
     <form onSubmit={submit} className="max-w-3xl mx-auto flex flex-col gap-space-lg pb-space-xl">
       <Card className="p-space-xl">
         <h1 className="m-0 font-headline-1 text-headline-1 text-on-surface">Hồ sơ cá nhân & Cài đặt tài khoản</h1>
@@ -143,7 +149,7 @@ export default function ProfilePage() {
             </div>
             <button
               type="button"
-              onClick={() => toast("Đổi số điện thoại cần xác thực OTP, tính năng này chưa được hỗ trợ.", "info")}
+              onClick={() => setPhoneOpen(true)}
               className="px-space-lg rounded-xl border-0 cursor-pointer bg-surface-container-high hover:bg-surface-variant font-button-text text-button-text text-on-surface transition-colors"
             >
               Đổi SĐT
@@ -248,5 +254,16 @@ export default function ProfilePage() {
         </div>
       </Card>
     </form>
+    <ChangePhoneDialog
+      open={phoneOpen}
+      currentPhone={saved.soDienThoai ?? ""}
+      onClose={() => setPhoneOpen(false)}
+      onChanged={(hoSo) => {
+        setSaved((prev) => ({ ...prev, soDienThoai: hoSo.soDienThoai, soDienThoaiDaXacThuc: true }));
+        setForm((prev) => ({ ...prev, soDienThoai: hoSo.soDienThoai }));
+        toast("Đã đổi số điện thoại.", "ok");
+      }}
+    />
+    </>
   );
 }

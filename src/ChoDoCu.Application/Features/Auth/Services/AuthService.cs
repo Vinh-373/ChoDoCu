@@ -7,6 +7,7 @@ using ChoDoCu.Domain.Entities;
 using ChoDoCu.Domain.Enums;
 using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
+using System.Collections.Concurrent;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ namespace ChoDoCu.Application.Features.Auth.Services;
 
 public class AuthService : IAuthService
 {
+    private const string GoogleProvider = "Google";
     private const string SaiThongTin = "Email hoặc mật khẩu không đúng.";
 
     private readonly IUnitOfWork _uow;
@@ -27,6 +29,7 @@ public class AuthService : IAuthService
     private readonly IValidator<QuenMatKhauRequest> _quenMatKhauValidator;
     private readonly IValidator<DatLaiMatKhauRequest> _datLaiMatKhauValidator;
     private readonly IEmailService _email;
+    private readonly IGoogleTokenVerifier _google;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
@@ -40,6 +43,7 @@ public class AuthService : IAuthService
         IValidator<QuenMatKhauRequest> quenMatKhauValidator,
         IValidator<DatLaiMatKhauRequest> datLaiMatKhauValidator,
         IEmailService email,
+        IGoogleTokenVerifier google,
         ILogger<AuthService> logger)
     {
         _uow = uow;
@@ -52,6 +56,7 @@ public class AuthService : IAuthService
         _quenMatKhauValidator = quenMatKhauValidator;
         _datLaiMatKhauValidator = datLaiMatKhauValidator;
         _email = email;
+        _google = google;
         _logger = logger;
     }
 
@@ -129,6 +134,68 @@ public class AuthService : IAuthService
         return Result<AuthResponse>.Ok(await TaoAuthResponseAsync(nguoiDung));
     }
 
+    public async Task<Result<AuthResponse>> DangNhapGoogleAsync(DangNhapGoogleRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.IdToken))
+            return Result<AuthResponse>.Fail("Thiếu mã xác thực Google.");
+
+        // Google ký idToken; verifier kiểm tra chữ ký, hạn dùng và audience = ClientId của ứng dụng.
+        var info = await _google.XacThucAsync(request.IdToken);
+        if (info is null || !info.EmailVerified || string.IsNullOrWhiteSpace(info.Email))
+            return Result<AuthResponse>.Fail("Không xác thực được tài khoản Google.");
+
+        var email = info.Email.Trim().ToLowerInvariant();
+
+        // 1) Đã từng đăng nhập Google → tìm theo (Google, sub) trong AspNetUserLogins.
+        var nguoiDung = await _userManager.FindByLoginAsync(GoogleProvider, info.Subject);
+
+        if (nguoiDung is null)
+        {
+            // 2) Chưa liên kết → dùng tài khoản cùng email (Google đã xác minh email), nếu chưa có thì tạo mới.
+            nguoiDung = await _userManager.FindByEmailAsync(email);
+
+            if (nguoiDung is null)
+            {
+                nguoiDung = new NguoiDung
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                    HoTen = string.IsNullOrWhiteSpace(info.Name) ? email.Split('@')[0] : info.Name.Trim(),
+                    // Google không cung cấp các trường dưới đây; người dùng bổ sung ở trang hồ sơ.
+                    SoDienThoai = string.Empty,
+                    NgaySinh = new DateTime(1900, 1, 1), // tạm, FE hiển thị như chưa nhập
+                    GioiTinh = "Chưa XĐ",       // người dùng chọn lại ở trang hồ sơ
+                    TrangThai = TrangThaiNguoiDung.HoatDong,
+                    NgayTao = DateTime.Now
+                };
+
+                var created = await _userManager.CreateAsync(nguoiDung); // không mật khẩu
+                if (!created.Succeeded)
+                    return Result<AuthResponse>.Fail(GopLoi(created));
+
+                var addRole = await _userManager.AddToRoleAsync(nguoiDung, AppRoles.User);
+                if (!addRole.Succeeded)
+                {
+                    await _userManager.DeleteAsync(nguoiDung);
+                    return Result<AuthResponse>.Fail("Không thể gán vai trò cho tài khoản. Vui lòng thử lại.");
+                }
+            }
+
+            var linked = await _userManager.AddLoginAsync(nguoiDung, new UserLoginInfo(GoogleProvider, info.Subject, GoogleProvider));
+            if (!linked.Succeeded)
+                return Result<AuthResponse>.Fail(GopLoi(linked));
+        }
+
+        if (nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
+            return Result<AuthResponse>.Fail("Tài khoản đã bị khóa.");
+
+        if (await _userManager.IsLockedOutAsync(nguoiDung))
+            return Result<AuthResponse>.Fail(ThongBaoBiKhoaTam(nguoiDung));
+
+        return Result<AuthResponse>.Ok(await TaoAuthResponseAsync(nguoiDung));
+    }
+
     public async Task<Result<bool>> DoiMatKhauAsync(int idNguoiDung, DoiMatKhauRequest request)
     {
         await _doiMatKhauValidator.ValidateAndThrowAsync(request);
@@ -148,6 +215,25 @@ public class AuthService : IAuthService
         return Result<bool>.Ok(true);
     }
 
+    // ================= Quên mật khẩu bằng mã 6 số gửi qua email =================
+    // Mã do Identity (EmailTokenProvider, kiểu TOTP) tính từ SecurityStamp + email + thời gian nên không lưu ở đâu cả;
+    // đổi mật khẩu xong thì SecurityStamp đổi và mã cũ tự mất hiệu lực.
+
+    private const string MucDichMaDatLai = "DatLaiMatKhau";
+    private const int SoLanNhapMaToiDa = 5;
+    private static readonly TimeSpan ThoiGianKhoaNhapMa = TimeSpan.FromMinutes(15);
+    // Đếm số lần nhập sai mã theo email (trong bộ nhớ của tiến trình; chạy nhiều instance thì chuyển sang cache dùng chung).
+    private static readonly ConcurrentDictionary<string, (int SoLan, DateTime HetHan)> NhapSaiMa = new();
+
+    private static bool DaNhapSaiQuaNhieu(string email) =>
+        NhapSaiMa.TryGetValue(email, out var v) && v.HetHan > DateTime.UtcNow && v.SoLan >= SoLanNhapMaToiDa;
+
+    private static void GhiNhanNhapSai(string email) =>
+        NhapSaiMa.AddOrUpdate(
+            email,
+            _ => (1, DateTime.UtcNow.Add(ThoiGianKhoaNhapMa)),
+            (_, cu) => cu.HetHan <= DateTime.UtcNow ? (1, DateTime.UtcNow.Add(ThoiGianKhoaNhapMa)) : (cu.SoLan + 1, cu.HetHan));
+
     public async Task QuenMatKhauAsync(QuenMatKhauRequest request)
     {
         await _quenMatKhauValidator.ValidateAndThrowAsync(request);
@@ -159,44 +245,78 @@ public class AuthService : IAuthService
         if (nguoiDung is null || nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
             return;
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(nguoiDung);
+        var ma = await _userManager.GenerateUserTokenAsync(nguoiDung, TokenOptions.DefaultEmailProvider, MucDichMaDatLai);
+        NhapSaiMa.TryRemove(email, out _);
 
         try
         {
-            await _email.GuiDatLaiMatKhauAsync(email, nguoiDung.HoTen, token);
+            // Tham số thứ 3 của GuiDatLaiMatKhauAsync giờ là mã 6 số (trước đây là token trong liên kết).
+            await _email.GuiDatLaiMatKhauAsync(email, nguoiDung.HoTen, ma);
         }
         catch (Exception ex)
         {
             // Lỗi SMTP chỉ ghi log; trả lỗi ra ngoài sẽ làm lộ việc email này có tồn tại.
-            _logger.LogError(ex, "Không gửi được email đặt lại mật khẩu cho người dùng {IdNguoiDung}.", nguoiDung.Id);
+            _logger.LogError(ex, "Không gửi được email mã đặt lại mật khẩu cho người dùng {IdNguoiDung}.", nguoiDung.Id);
         }
     }
 
+    /// <summary>Kiểm tra mã 6 số (bước 2 của màn hình quên mật khẩu), chưa đổi mật khẩu.</summary>
+    public async Task<Result<bool>> XacNhanMaDatLaiAsync(XacNhanMaDatLaiRequest request)
+    {
+        var (nguoiDung, loi) = await TimNguoiDungVaKiemTraMaAsync(request.Email, request.MaXacNhan);
+        return nguoiDung is null ? Result<bool>.Fail(loi!) : Result<bool>.Ok(true);
+    }
+
+    /// <summary>Đặt mật khẩu mới. DatLaiMatKhauRequest.Token chính là mã 6 số nhận qua email.</summary>
     public async Task<Result<bool>> DatLaiMatKhauAsync(DatLaiMatKhauRequest request)
     {
         await _datLaiMatKhauValidator.ValidateAndThrowAsync(request);
 
-        const string LienKetKhongHopLe = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+        var (nguoiDung, loi) = await TimNguoiDungVaKiemTraMaAsync(request.Email, request.MaOTP);
+        if (nguoiDung is null)
+            return Result<bool>.Fail(loi!);
 
-        var email = request.Email.Trim().ToLowerInvariant();
-        var nguoiDung = await _userManager.FindByEmailAsync(email);
-        if (nguoiDung is null || nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
-            return Result<bool>.Fail(LienKetKhongHopLe);
-
-        var result = await _userManager.ResetPasswordAsync(nguoiDung, request.Token, request.MatKhauMoi);
+        // Mã đúng -> tạo token nội bộ của Identity để đặt mật khẩu (client không cần giữ token này).
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(nguoiDung);
+        var result = await _userManager.ResetPasswordAsync(nguoiDung, resetToken, request.MatKhauMoi);
         if (!result.Succeeded)
-        {
-            return Result<bool>.Fail(
-                result.Errors.Any(e => e.Code == nameof(IdentityErrorDescriber.InvalidToken))
-                    ? LienKetKhongHopLe
-                    : GopLoi(result));
-        }
+            return Result<bool>.Fail(GopLoi(result));
+
+        NhapSaiMa.TryRemove(nguoiDung.Email!.ToLowerInvariant(), out _);
 
         // Đặt lại mật khẩu xong thì cho đăng nhập lại ngay, kể cả khi đang bị khóa tạm do nhập sai.
         await _userManager.SetLockoutEndDateAsync(nguoiDung, null);
         await _userManager.ResetAccessFailedCountAsync(nguoiDung);
 
         return Result<bool>.Ok(true);
+    }
+
+    private async Task<(NguoiDung? NguoiDung, string? Loi)> TimNguoiDungVaKiemTraMaAsync(string? emailRaw, string? maRaw)
+    {
+        const string MaKhongHopLe = "Mã xác nhận không đúng hoặc đã hết hạn.";
+
+        var email = (emailRaw ?? string.Empty).Trim().ToLowerInvariant();
+        var ma = (maRaw ?? string.Empty).Trim();
+
+        if (DaNhapSaiQuaNhieu(email))
+            return (null, "Bạn đã nhập sai mã quá nhiều lần. Vui lòng thử lại sau 15 phút hoặc yêu cầu mã mới.");
+
+        var nguoiDung = await _userManager.FindByEmailAsync(email);
+        if (nguoiDung is null || nguoiDung.TrangThai == TrangThaiNguoiDung.Khoa)
+        {
+            GhiNhanNhapSai(email);
+            return (null, MaKhongHopLe);
+        }
+
+        var hopLe = ma.Length == 6 &&
+            await _userManager.VerifyUserTokenAsync(nguoiDung, TokenOptions.DefaultEmailProvider, MucDichMaDatLai, ma);
+        if (!hopLe)
+        {
+            GhiNhanNhapSai(email);
+            return (null, MaKhongHopLe);
+        }
+
+        return (nguoiDung, null);
     }
 
     private async Task<AuthResponse> TaoAuthResponseAsync(NguoiDung nd)

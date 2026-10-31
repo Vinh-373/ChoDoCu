@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useToast } from "../../contexts/ToastContext";
+import GoogleLoginButton, { googleConfigured } from "./GoogleLoginButton";
 
 // Logo thương hiệu là SVG (Material Symbols không có icon Google/Facebook).
 function GoogleLogo() {
@@ -35,7 +36,7 @@ function SocialButton({ label, logo, onClick }: ButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="h-11 w-full px-space-md bg-white hover:bg-surface-container-low text-on-surface border border-outline-variant rounded-xl flex items-center justify-center gap-space-sm cursor-pointer shadow-sm transition-colors font-button-text text-body-2"
+      className="h-10 w-full px-space-md bg-white hover:bg-surface-container-low text-on-surface border border-outline-variant rounded-xl flex items-center justify-center gap-space-sm cursor-pointer shadow-sm transition-colors font-button-text text-body-2"
     >
       {logo}
       <span className="leading-none">{label}</span>
@@ -43,15 +44,27 @@ function SocialButton({ label, logo, onClick }: ButtonProps) {
   );
 }
 
-/** Hai nút đăng nhập mạng xã hội. BE chưa có OAuth nên hiện mới chỉ báo "chưa hỗ trợ". */
-export default function SocialLoginButtons() {
+interface Props {
+  /** Nhận idToken do Google cấp sau khi người dùng chọn tài khoản. */
+  onGoogleCredential: (idToken: string) => void;
+}
+
+/** Hai nút đăng nhập mạng xã hội: Google hoạt động thật, Facebook chưa hỗ trợ. */
+export default function SocialLoginButtons({ onGoogleCredential }: Props) {
   const toast = useToast();
-  const notSupported = (name: string) => () => toast(`Đăng nhập bằng ${name} chưa được hỗ trợ.`, "info");
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
-      <SocialButton label="Google" logo={<GoogleLogo />} onClick={notSupported("Google")} />
-      <SocialButton label="Facebook" logo={<FacebookLogo />} onClick={notSupported("Facebook")} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md items-center">
+      {googleConfigured ? (
+        <GoogleLoginButton onCredential={onGoogleCredential} onError={(m) => toast(m, "error")} />
+      ) : (
+        <SocialButton
+          label="Google"
+          logo={<GoogleLogo />}
+          onClick={() => toast("Chưa cấu hình đăng nhập Google: hãy điền VITE_GOOGLE_CLIENT_ID trong file .env rồi chạy lại npm run dev.", "info")}
+        />
+      )}
+      <SocialButton label="Facebook" logo={<FacebookLogo />} onClick={() => toast("Đăng nhập bằng Facebook chưa được hỗ trợ.", "info")} />
     </div>
   );
 }

@@ -28,6 +28,14 @@ public class AuthController : ControllerBase
         return result.IsSuccess ? Ok(result.Data) : Unauthorized(new { message = result.Error });
     }
 
+    /// <summary>Đăng nhập bằng Google: FE gửi idToken lấy từ Google Identity Services.</summary>
+    [HttpPost("dang-nhap-google")]
+    public async Task<IActionResult> DangNhapGoogle(DangNhapGoogleRequest request)
+    {
+        var result = await _authService.DangNhapGoogleAsync(request);
+        return result.IsSuccess ? Ok(result.Data) : Unauthorized(new { message = result.Error });
+    }
+
     [Authorize]
     [HttpPost("doi-mat-khau")]
     public async Task<IActionResult> DoiMatKhau(DoiMatKhauRequest request)
@@ -44,7 +52,17 @@ public class AuthController : ControllerBase
         await _authService.QuenMatKhauAsync(request);
 
         // Luôn trả cùng một thông báo dù email có tồn tại hay không.
-        return Ok(new { message = "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu." });
+        return Ok(new { message = "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi mã xác nhận đặt lại mật khẩu." });
+    }
+
+    /// <summary>Bước 2 quên mật khẩu: kiểm tra mã 6 số nhận qua email (chưa đổi mật khẩu).</summary>
+    [HttpPost("xac-nhan-ma-dat-lai")]
+    public async Task<IActionResult> XacNhanMaDatLai(XacNhanMaDatLaiRequest request)
+    {
+        var result = await _authService.XacNhanMaDatLaiAsync(request);
+        return result.IsSuccess
+            ? Ok(new { message = "Mã xác nhận hợp lệ." })
+            : BadRequest(new { message = result.Error });
     }
 
     [HttpPost("dat-lai-mat-khau")]

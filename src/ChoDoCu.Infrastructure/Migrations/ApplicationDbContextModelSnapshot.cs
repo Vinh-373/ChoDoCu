@@ -527,6 +527,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("concurrencyStamp");
 
+                    b.Property<string>("DiaChiChiTiet")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("diaChiChiTiet");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -536,6 +540,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit")
                         .HasColumnName("emailConfirmed");
+
+                    b.Property<string>("GioiThieu")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("gioiThieu");
 
                     b.Property<string>("GioiTinh")
                         .IsRequired()
@@ -613,6 +621,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("soDienThoai");
+
+                    b.Property<string>("TenGianHang")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("tenGianHang");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
