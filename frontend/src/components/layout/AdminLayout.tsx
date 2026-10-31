@@ -13,9 +13,12 @@ interface Item {
 const items: Item[] = [
   { to: "/quan-tri", label: "Tổng quan", icon: "grid", end: true },
   { to: "/quan-tri/duyet-bai", label: "Duyệt bài", icon: "check" },
-  { to: "/quan-tri/bao-cao", label: "Báo cáo vi phạm", icon: "flag", adminOnly: true },
+  { to: "/quan-tri/bao-cao", label: "Báo cáo bài đăng", icon: "flag", adminOnly: true },
   { to: "/quan-tri/danh-muc", label: "Danh mục", icon: "tag", adminOnly: true },
   { to: "/quan-tri/banner", label: "Banner", icon: "image", adminOnly: true },
+  { to: "/quan-tri/san-pham", label: "Sản phẩm", icon: "grid", adminOnly: true },
+  { to: "/quan-tri/hang", label: "Hãng", icon: "tag", adminOnly: true },
+  { to: "/quan-tri/thuoc-tinh", label: "Thuộc tính sản phẩm", icon: "edit", adminOnly: true },
 ];
 
 export default function AdminLayout() {

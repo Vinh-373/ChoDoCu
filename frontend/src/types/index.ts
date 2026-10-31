@@ -53,6 +53,46 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
+export interface AdminDashboardStats {
+  users: number;
+  posts: number;
+  transactions: number;
+  reports: number;
+}
+
+export interface AdminProduct {
+  id: number;
+  idDanhMuc: number;
+  tenDanhMuc: string;
+  idHang: number | null;
+  tenHang: string | null;
+  idDongSanPham: number | null;
+  idDongCuThe: number | null;
+  tenSanPham: string;
+  giaTien: number;
+  moTa: string;
+}
+
+export interface AdminBrand {
+  id: number;
+  tenHang: string;
+  logo: string | null;
+  trangThai: string;
+}
+
+export interface AdminAttribute {
+  id: number;
+  idDanhMuc: number | null;
+  idThuocTinhCha: number | null;
+  tenThuocTinh: string;
+  kieuDuLieu: "Text" | "So" | "LuaChon";
+  danhSachGiaTriLuaChon: string[];
+  batBuoc: boolean;
+  thuTu: number;
+  trangThai: string;
+  ngayTao: string;
+}
+
 // ---- Bài đăng ----
 export type TrangThaiBaiDang = "ChoDuyet" | "DaDuyet" | "TuChoi" | "DaAn";
 
@@ -165,6 +205,7 @@ export interface Banner {
   hinhAnh: string | null;
   viTri: string | null;
   ngaySua: string | null;
+  trangThai: string;
 }
 export interface DichVu {
   id: number;

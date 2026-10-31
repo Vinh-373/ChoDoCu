@@ -57,6 +57,7 @@ public static class DependencyInjection
         services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(tokenHours));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IJwtService, JwtService>();
 
         services.Configure<CloudinarySettings>(

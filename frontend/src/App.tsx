@@ -9,6 +9,9 @@ import AdminBanners from "./pages/admin/AdminBanners";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBrands from "./pages/admin/AdminBrands";
+import AdminAttributes from "./pages/admin/AdminAttributes";
 import Favorites from "./pages/account/Favorites";
 import Notifications from "./pages/account/Notifications";
 import LoginPage from "./pages/auth/LoginPage";
@@ -65,6 +68,9 @@ export default function App() {
                 <Route path="bao-cao" element={<AdminReports />} />
                 <Route path="danh-muc" element={<AdminCategories />} />
                 <Route path="banner" element={<AdminBanners />} />
+                <Route path="san-pham" element={<AdminProducts />} />
+                <Route path="hang" element={<AdminBrands />} />
+                <Route path="thuoc-tinh" element={<AdminAttributes />} />
               </Route>
             </Route>
           </Route>

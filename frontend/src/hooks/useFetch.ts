@@ -9,7 +9,7 @@ interface FetchState<T> {
 }
 
 /** Gọi API khi deps đổi; bỏ qua kết quả của request cũ nếu deps đã đổi tiếp. */
-export function useFetch<T>(fetcher: () => Promise<T>, deps: DependencyList): FetchState<T> {
+export function useFetch<T>(fetcher: () => Promise<T>, deps: DependencyList, enabled = true): FetchState<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +19,15 @@ export function useFetch<T>(fetcher: () => Promise<T>, deps: DependencyList): Fe
 
   useEffect(() => {
     let cancelled = false;
+    if (!enabled) {
+      setLoading(false);
+      setError(null);
+      setData(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     setLoading(true);
     setError(null);
     fetcherRef
@@ -30,7 +39,7 @@ export function useFetch<T>(fetcher: () => Promise<T>, deps: DependencyList): Fe
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, tick]);
+  }, [...deps, tick, enabled]);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);
   return { data, loading, error, reload };

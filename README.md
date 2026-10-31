@@ -109,6 +109,8 @@ Tài khoản Admin mặc định (chỉ dùng cho dev):
 
 Cách gọi API có yêu cầu đăng nhập trên Swagger: gọi `POST /api/auth/dang-nhap`, copy giá trị `token`, bấm nút **Authorize** ở góc trên và dán token vào (không cần gõ chữ `Bearer`).
 
+Sau khi đăng nhập bằng tài khoản Admin, mở giao diện frontend tại `/quan-tri` để xem thống kê người dùng, bài đăng, giao dịch và báo cáo; quản lý bài đăng bị báo cáo, danh mục, banner, sản phẩm, hãng và thuộc tính sản phẩm. Các API quản trị yêu cầu quyền Admin phù hợp.
+
 ## 5. Cấu hình
 
 Cấu hình đọc theo thứ tự, mục sau ghi đè mục trước:

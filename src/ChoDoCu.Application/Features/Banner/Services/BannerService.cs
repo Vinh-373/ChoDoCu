@@ -34,6 +34,20 @@ public class BannerService : IBannerService
         return ToResponse(banner);
     }
 
+    public async Task<BannerResponse> CapNhatAsync(int id, TaoBannerRequest request)
+    {
+        await _validator.ValidateAndThrowAsync(request);
+
+        var banner = await _uow.Banners.GetByIdAsync(id)
+            ?? throw new NotFoundException(nameof(Domain.Entities.Banner), id);
+        banner.HinhAnh = request.HinhAnh;
+        banner.ViTri = request.ViTri;
+        banner.NgaySua = DateTime.Now;
+
+        await _uow.SaveChangesAsync();
+        return ToResponse(banner);
+    }
+
     public async Task XoaAsync(int id)
     {
         var banner = await _uow.Banners.GetByIdAsync(id) ?? throw new NotFoundException(nameof(Domain.Entities.Banner), id);
@@ -41,5 +55,6 @@ public class BannerService : IBannerService
         await _uow.SaveChangesAsync();
     }
 
-    private static BannerResponse ToResponse(Domain.Entities.Banner b) => new(b.Id, b.HinhAnh, b.ViTri, b.NgaySua);
+    private static BannerResponse ToResponse(Domain.Entities.Banner b) =>
+        new(b.Id, b.HinhAnh, b.ViTri, b.NgaySua, b.TrangThai);
 }

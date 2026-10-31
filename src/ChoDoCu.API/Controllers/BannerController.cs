@@ -22,6 +22,11 @@ public class BannerController : ControllerBase
     public async Task<IActionResult> Tao(TaoBannerRequest request) => Ok(await _service.TaoAsync(request));
 
     [HasPermission(AppPermissions.BannerQuanLy)]
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> CapNhat(int id, TaoBannerRequest request)
+        => Ok(await _service.CapNhatAsync(id, request));
+
+    [HasPermission(AppPermissions.BannerQuanLy)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Xoa(int id)
     {

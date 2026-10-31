@@ -23,6 +23,8 @@ public static class AppPermissions
     public const string NguoiDungKhoa = "NguoiDung.Khoa";
     public const string PhanQuyenQuanLy = "PhanQuyen.QuanLy";
     public const string ThanhToanXacNhan = "ThanhToan.XacNhan";
+    public const string AdminDashboardXem = "AdminDashboard.Xem";
+    public const string SanPhamQuanLy = "SanPham.QuanLy";
 
     /// Quyền liên quan đến dịch vụ (gói dịch vụ)
     public const string DichVuXem = "DichVu.Xem";
@@ -50,6 +52,8 @@ public static class AppPermissions
         (NguoiDungKhoa, "Khóa / mở khóa người dùng"),
         (PhanQuyenQuanLy, "Quản lý vai trò và phân quyền"),
         (ThanhToanXacNhan, "Xác nhận thanh toán"),
+        (AdminDashboardXem, "Xem thống kê trang quản trị"),
+        (SanPhamQuanLy, "Quản lý danh mục sản phẩm"),
     };
 
     /// <summary>Quyền gán sẵn cho từng Role khi seed lần đầu. Admin luôn có toàn bộ.</summary>

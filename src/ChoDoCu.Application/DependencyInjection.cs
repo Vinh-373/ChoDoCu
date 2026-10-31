@@ -28,6 +28,8 @@ using ChoDoCu.Application.Features.Account.Interfaces;
 using ChoDoCu.Application.Features.Account.Services;
 using ChoDoCu.Application.Features.Authorization.Interfaces;
 using ChoDoCu.Application.Features.Authorization.Services;
+using ChoDoCu.Application.Features.Admin.Interfaces;
+using ChoDoCu.Application.Features.Admin.Services;
 
 namespace ChoDoCu.Application;
 
@@ -54,6 +56,8 @@ public static class DependencyInjection
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IRolePermissionService, RolePermissionService>();
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+        services.AddScoped<IAdminCatalogService, AdminCatalogService>();
 
         return services;
     }
