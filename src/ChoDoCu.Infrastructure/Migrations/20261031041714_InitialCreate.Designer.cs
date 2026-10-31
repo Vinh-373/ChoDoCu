@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChoDoCu.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261031095120_CreateIntial")]
-    partial class CreateIntial
+    [Migration("20261031041714_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -71,10 +71,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Property<bool>("CoThuongLuong")
                         .HasColumnType("bit")
                         .HasColumnName("coThuongLuong");
-
-                    b.Property<bool>("DaXoa")
-                        .HasColumnType("bit")
-                        .HasColumnName("daXoa");
 
                     b.Property<string>("DiaChi")
                         .IsRequired()
@@ -161,10 +157,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Property<DateTime?>("NgayHetHan")
                         .HasColumnType("datetime2")
                         .HasColumnName("ngayHetHan");
-
-                    b.Property<DateTime?>("NgayXoa")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("ngayXoa");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
@@ -640,6 +632,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("concurrencyStamp");
 
+                    b.Property<string>("DiaChiChiTiet")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("diaChiChiTiet");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -649,6 +645,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit")
                         .HasColumnName("emailConfirmed");
+
+                    b.Property<string>("GioiThieu")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("gioiThieu");
 
                     b.Property<string>("GioiTinh")
                         .IsRequired()
@@ -726,6 +726,10 @@ namespace ChoDoCu.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("soDienThoai");
+
+                    b.Property<string>("TenGianHang")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("tenGianHang");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()

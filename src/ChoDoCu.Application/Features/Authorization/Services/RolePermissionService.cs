@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ChoDoCu.Application.Features.Authorization.DTOs;
 using ChoDoCu.Application.Features.Authorization.Interfaces;
 using ChoDoCu.Domain.Constants;
+using ChoDoCu.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace ChoDoCu.Application.Features.Authorization.Services;
@@ -74,7 +75,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (invalidCodes.Count > 0)
         {
-            throw new InvalidOperationException(
+            throw new DomainException(
                 $"Mã quyền không hợp lệ: {string.Join(", ", invalidCodes)}");
         }
 

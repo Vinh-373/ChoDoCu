@@ -63,7 +63,7 @@ public class TinNhanService : ITinNhanService
         if (hoiThoai.IdNguoiDung1 != idNguoiDung &&
             hoiThoai.IdNguoiDung2 != idNguoiDung)
         {
-            throw new DomainException(
+            throw new ForbiddenException(
                 "Bạn không có quyền xem hội thoại này.");
         }
 

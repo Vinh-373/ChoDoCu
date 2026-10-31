@@ -65,6 +65,8 @@ public static class DependencyInjection
         services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
         services.AddScoped<IFileStorage, LocalFileStorage>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        // Thêm IFileStorage, IEmailService... ở đây
+        services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
 
         return services;
     }

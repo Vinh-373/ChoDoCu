@@ -46,7 +46,7 @@ export default function AdminApprove() {
 
   return (
     <div className="stack">
-      <h1>Duyệt bài</h1>
+      <h1 className="admin-page-title">Duyệt bài</h1>
       <form className="row" onSubmit={load}>
         <div className="field">
           <label htmlFor="id">Mã tin đăng</label>

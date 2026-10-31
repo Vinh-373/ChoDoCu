@@ -26,7 +26,7 @@ public class DichVuController : ControllerBase
     [HasPermission(AppPermissions.DichVuThem)]
     [HttpPost ]
     public async Task<IActionResult> Tao(TaoDichVuRequest request)
-        => Ok(await _service.TaoAsync(request));
+        => StatusCode(StatusCodes.Status201Created, await _service.TaoAsync(request));
 
     // Cập nhật thông tin gói dịch vụ
     [HasPermission(AppPermissions.DichVuSua)]
@@ -40,6 +40,15 @@ public class DichVuController : ControllerBase
     public async Task<IActionResult> NgungBan(int id)
     {
         await _service.XoaAsync(id);
+        return NoContent();
+    }
+
+    // Kích hoạt lại gói đã ngừng bán; dùng cùng quyền sửa gói dịch vụ.
+    [HasPermission(AppPermissions.DichVuSua)]
+    [HttpPut("{id:int}/kich-hoat")]
+    public async Task<IActionResult> KichHoat(int id)
+    {
+        await _service.KichHoatAsync(id);
         return NoContent();
     }
 }

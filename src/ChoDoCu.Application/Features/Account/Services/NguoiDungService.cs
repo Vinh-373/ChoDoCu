@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using ChoDoCu.Application.Common.Interfaces;
 using ChoDoCu.Application.Common.Models;
 using ChoDoCu.Application.Features.Account.DTOs;
 using ChoDoCu.Application.Features.Account.Interfaces;
@@ -8,23 +10,32 @@ using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace ChoDoCu.Application.Features.Account.Services;
 
 public class NguoiDungService : INguoiDungService
 {
+    private static readonly Regex SoDienThoaiHopLe = new(@"^(0|\+84)\d{9}$", RegexOptions.Compiled);
+
     private readonly IUnitOfWork _uow;
     private readonly UserManager<NguoiDung> _userManager;
     private readonly IValidator<CapNhatHoSoRequest> _capNhatValidator;
+    private readonly IEmailService _email;
+    private readonly ILogger<NguoiDungService> _logger;
 
     public NguoiDungService(
         IUnitOfWork uow,
         UserManager<NguoiDung> userManager,
-        IValidator<CapNhatHoSoRequest> capNhatValidator)
+        IValidator<CapNhatHoSoRequest> capNhatValidator,
+        IEmailService email,
+        ILogger<NguoiDungService> logger)
     {
         _uow = uow;
         _userManager = userManager;
         _capNhatValidator = capNhatValidator;
+        _email = email;
+        _logger = logger;
     }
 
     // ================= Hồ sơ cá nhân =================
@@ -42,7 +53,8 @@ public class NguoiDungService : INguoiDungService
             nd.AnhNguoiDung,
             nd.IdThanhPho, nd.ThanhPho?.TenThanhPho,
             nd.IdPhuongXa, nd.PhuongXa?.TenPhuongXa,
-            nd.LuotDang, nd.LuotDay, nd.NgayTao, nd.TrangThai.ToString(), roles);
+            nd.LuotDang, nd.LuotDay, nd.NgayTao, nd.TrangThai.ToString(), roles,
+            nd.TenGianHang, nd.DiaChiChiTiet, nd.GioiThieu);
     }
 
     public async Task<HoSoResponse> CapNhatHoSoAsync(int idNguoiDung, CapNhatHoSoRequest request)
@@ -52,26 +64,103 @@ public class NguoiDungService : INguoiDungService
         var nd = await _userManager.FindByIdAsync(idNguoiDung.ToString())
             ?? throw new NotFoundException(nameof(NguoiDung), idNguoiDung);
 
-        var soDienThoai = request.SoDienThoai.Trim();
-        if (await _uow.NguoiDungs.SoDienThoaiDaDuocNguoiKhacDungAsync(soDienThoai, idNguoiDung))
-            throw new DomainException("Số điện thoại đã được sử dụng.");
+        // Số điện thoại KHÔNG đổi qua API này: muốn đổi phải xác nhận bằng mã gửi qua email
+        // (YeuCauDoiSoDienThoaiAsync / XacNhanDoiSoDienThoaiAsync). Nếu tài khoản chưa có số (đăng nhập Google)
+        // thì cho điền lần đầu, vẫn kiểm tra trùng.
+        var soDienThoai = request.SoDienThoai?.Trim();
+        if (string.IsNullOrEmpty(nd.SoDienThoai) && !string.IsNullOrEmpty(soDienThoai))
+        {
+            if (await _uow.NguoiDungs.SoDienThoaiDaDuocNguoiKhacDungAsync(soDienThoai, idNguoiDung))
+                throw new DomainException("Số điện thoại đã được sử dụng.");
+
+            nd.SoDienThoai = soDienThoai;
+            nd.PhoneNumber = soDienThoai;
+        }
 
         await KiemTraDiaChiAsync(request.IdThanhPho, request.IdPhuongXa);
 
         nd.HoTen = request.HoTen.Trim();
-        nd.SoDienThoai = soDienThoai;
-        nd.PhoneNumber = soDienThoai;
-        nd.NgaySinh = request.NgaySinh;
-        nd.GioiTinh = request.GioiTinh;
-        nd.AnhNguoiDung = string.IsNullOrWhiteSpace(request.AnhNguoiDung) ? null : request.AnhNguoiDung.Trim();
+        if (request.NgaySinh is { } ngaySinh) nd.NgaySinh = ngaySinh;
+        if (!string.IsNullOrWhiteSpace(request.GioiTinh)) nd.GioiTinh = request.GioiTinh.Trim();
+        if (request.AnhNguoiDung is not null)
+            nd.AnhNguoiDung = string.IsNullOrWhiteSpace(request.AnhNguoiDung) ? null : request.AnhNguoiDung.Trim();
         nd.IdThanhPho = request.IdThanhPho;
         nd.IdPhuongXa = request.IdPhuongXa;
+        nd.TenGianHang = string.IsNullOrWhiteSpace(request.TenGianHang) ? null : request.TenGianHang.Trim();
+        nd.DiaChiChiTiet = string.IsNullOrWhiteSpace(request.DiaChiChiTiet) ? null : request.DiaChiChiTiet.Trim();
+        nd.GioiThieu = string.IsNullOrWhiteSpace(request.GioiThieu) ? null : request.GioiThieu.Trim();
 
         var result = await _userManager.UpdateAsync(nd);
         if (!result.Succeeded)
             throw new DomainException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
         return await GetHoSoAsync(idNguoiDung);
+    }
+
+    // ================= Đổi số điện thoại bằng mã gửi qua email =================
+
+    public async Task YeuCauDoiSoDienThoaiAsync(int idNguoiDung, YeuCauDoiSoDienThoaiRequest request)
+    {
+        var soMoi = ChuanHoaSoDienThoai(request.SoDienThoaiMoi);
+
+        var nd = await _userManager.FindByIdAsync(idNguoiDung.ToString())
+            ?? throw new NotFoundException(nameof(NguoiDung), idNguoiDung);
+
+        if (string.IsNullOrWhiteSpace(nd.Email))
+            throw new DomainException("Tài khoản chưa có email để nhận mã xác nhận.");
+        if (soMoi == nd.SoDienThoai)
+            throw new DomainException("Số điện thoại mới trùng với số hiện tại.");
+        if (await _uow.NguoiDungs.SoDienThoaiDaDuocNguoiKhacDungAsync(soMoi, idNguoiDung))
+            throw new DomainException("Số điện thoại đã được sử dụng.");
+
+        // Mã 6 chữ số gắn với số mới và tài khoản này (Identity: PhoneNumberTokenProvider), hết hạn sau vài phút.
+        var ma = await _userManager.GenerateChangePhoneNumberTokenAsync(nd, soMoi);
+
+        try
+        {
+            await _email.GuiMaDoiSoDienThoaiAsync(nd.Email, nd.HoTen, soMoi, ma);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Không gửi được email mã đổi số điện thoại cho người dùng {IdNguoiDung}.", idNguoiDung);
+            throw new DomainException("Không gửi được email xác nhận. Vui lòng thử lại sau.");
+        }
+    }
+
+    public async Task<HoSoResponse> XacNhanDoiSoDienThoaiAsync(int idNguoiDung, XacNhanDoiSoDienThoaiRequest request)
+    {
+        var soMoi = ChuanHoaSoDienThoai(request.SoDienThoaiMoi);
+        var ma = request.MaXacNhan?.Trim();
+        if (string.IsNullOrEmpty(ma))
+            throw new DomainException("Vui lòng nhập mã xác nhận.");
+
+        var nd = await _userManager.FindByIdAsync(idNguoiDung.ToString())
+            ?? throw new NotFoundException(nameof(NguoiDung), idNguoiDung);
+
+        if (!await _userManager.VerifyChangePhoneNumberTokenAsync(nd, ma, soMoi))
+            throw new DomainException("Mã xác nhận không đúng hoặc đã hết hạn.");
+
+        // Kiểm tra lại: trong lúc chờ mã, người khác có thể đã dùng số này.
+        if (await _uow.NguoiDungs.SoDienThoaiDaDuocNguoiKhacDungAsync(soMoi, idNguoiDung))
+            throw new DomainException("Số điện thoại đã được sử dụng.");
+
+        nd.SoDienThoai = soMoi;
+        nd.PhoneNumber = soMoi;
+        nd.PhoneNumberConfirmed = true;
+
+        var result = await _userManager.UpdateAsync(nd);
+        if (!result.Succeeded)
+            throw new DomainException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        return await GetHoSoAsync(idNguoiDung);
+    }
+
+    private static string ChuanHoaSoDienThoai(string? value)
+    {
+        var so = (value ?? string.Empty).Replace(" ", string.Empty).Trim();
+        if (!SoDienThoaiHopLe.IsMatch(so))
+            throw new DomainException("Số điện thoại không hợp lệ.");
+        return so;
     }
 
     private async Task KiemTraDiaChiAsync(int? idThanhPho, int? idPhuongXa)

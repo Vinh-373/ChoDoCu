@@ -9,4 +9,5 @@ public interface IDichVuService
     Task<DichVuResponse> TaoAsync(TaoDichVuRequest request);
     Task<DichVuResponse> CapNhatAsync(int id, CapNhatDichVuRequest request);
     Task XoaAsync(int id);
+    Task KichHoatAsync(int id);
 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ChoDoCu.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateIntial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -267,6 +267,9 @@ namespace ChoDoCu.Infrastructure.Migrations
                     idNguoiDung = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     anhNguoiDung = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    tenGianHang = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    diaChiChiTiet = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    gioiThieu = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     idThanhPho = table.Column<int>(type: "int", nullable: true),
                     idPhuongXa = table.Column<int>(type: "int", nullable: true),
                     hoTen = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
@@ -567,8 +570,6 @@ namespace ChoDoCu.Infrastructure.Migrations
                     ngayCapNhat = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     ngayDayTin = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ngayHetHan = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    daXoa = table.Column<bool>(type: "bit", nullable: false),
-                    ngayXoa = table.Column<DateTime>(type: "datetime2", nullable: true),
                     lyDoTuChoi = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     trangThai = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     uuTien = table.Column<DateTime>(type: "datetime2", nullable: true)

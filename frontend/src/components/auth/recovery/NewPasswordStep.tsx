@@ -8,12 +8,12 @@ import RecoveryHeading from "./RecoveryHeading";
 
 interface Props {
   email: string;
-  resetToken: string;
+  code: string;
   onDone: () => void;
 }
 
 /** Bước 3: đặt mật khẩu mới. Quy tắc độ dài khớp với đăng ký (tối thiểu 6 ký tự). */
-export default function NewPasswordStep({ email, resetToken, onDone }: Props) {
+export default function NewPasswordStep({ email, code, onDone }: Props) {
   const [matKhau, setMatKhau] = useState("");
   const [xacNhan, setXacNhan] = useState("");
   const [error, setError] = useState("");
@@ -26,10 +26,10 @@ export default function NewPasswordStep({ email, resetToken, onDone }: Props) {
     setError("");
     setBusy(true);
     try {
-      await authApi.datLaiMatKhau({ email, resetToken, matKhauMoi: matKhau });
+      await authApi.datLaiMatKhau({ email, maXacNhan: code, matKhauMoi: matKhau });
       onDone();
     } catch (err) {
-      setError(getErrorMessage(err, "Chưa đặt lại được mật khẩu. Phiên xác thực có thể đã hết hạn, hãy thử lại từ đầu."));
+      setError(getErrorMessage(err, "Chưa đặt lại được mật khẩu. Mã có thể đã hết hạn, hãy yêu cầu mã mới."));
     } finally {
       setBusy(false);
     }

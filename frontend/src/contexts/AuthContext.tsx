@@ -10,7 +10,10 @@ interface AuthContextValue {
   isAdmin: boolean;
   login: (data: DangNhapRequest) => Promise<void>;
   register: (data: DangKyRequest) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => void;
+  /** Cập nhật thông tin hiển thị (vd. họ tên sau khi sửa hồ sơ) mà không đổi token. */
+  updateUser: (patch: Partial<AuthResponse>) => void;
   hasRole: (...roles: string[]) => boolean;
 }
 
@@ -41,7 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((patch: Partial<AuthResponse>) => {
+    setUser((cur) => {
+      if (!cur) return cur;
+      const next = { ...cur, ...patch };
+      localStorage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const login = useCallback(async (data: DangNhapRequest) => save(await authApi.dangNhap(data)), [save]);
+  const loginWithGoogle = useCallback(async (idToken: string) => save(await authApi.dangNhapGoogle(idToken)), [save]);
   const register = useCallback(async (data: DangKyRequest) => save(await authApi.dangKy(data)), [save]);
 
   // Token hết hạn: interceptor phát sự kiện, ở đây đăng xuất và báo cho người dùng.
@@ -62,10 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isStaff: role === "Admin" || role === "Moderator",
       login,
       register,
+      loginWithGoogle,
       logout,
+      updateUser,
       hasRole: (...roles: string[]) => roles.includes(role),
     };
-  }, [user, login, register, logout]);
+  }, [user, login, register, loginWithGoogle, logout, updateUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

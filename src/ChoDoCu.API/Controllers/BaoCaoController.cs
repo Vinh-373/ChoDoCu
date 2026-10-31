@@ -18,7 +18,7 @@ public class BaoCaoController : ControllerBase
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> Tao(TaoBaoCaoRequest request)
-        => Ok(await _service.TaoAsync(GetUserId(), request));
+        => StatusCode(StatusCodes.Status201Created, await _service.TaoAsync(GetUserId(), request));
 
     [HasPermission(AppPermissions.BaoCaoXuLy)]
     [HttpGet]

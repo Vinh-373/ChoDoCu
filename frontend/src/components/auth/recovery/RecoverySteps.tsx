@@ -2,7 +2,7 @@ import MaterialIcon from "../../common/MaterialIcon";
 
 export const RECOVERY_STEPS = [
   { title: "Nhập email", text: "Xác định tài khoản cần khôi phục" },
-  { title: "Nhập mã OTP xác thực", text: "Nhận 6 chữ số qua email cá nhân" },
+  { title: "Nhập mã xác nhận", text: "Mã 6 số được gửi tới email của bạn" },
   { title: "Đặt mật khẩu mới", text: "Tạo mật khẩu mới, tối thiểu 6 ký tự" },
   { title: "Hoàn tất & đăng nhập", text: "Dùng mật khẩu mới để vào lại tài khoản" },
 ];

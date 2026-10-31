@@ -31,9 +31,9 @@ export interface HoSoNguoiDung {
   id: number;
   hoTen: string;
   email: string;
-  soDienThoai: string;
+  soDienThoai: string | null;
   ngaySinh: string | null; // yyyy-MM-dd
-  gioiTinh: "Nam" | "Nữ" | "Khác" | null;
+  gioiTinh: string | null; // "Nam" | "Nữ" | "Khác" hoặc giá trị khác do BE trả (vd. chưa xác định)
   tenGianHang?: string | null;
   idThanhPho?: number | null;
   idPhuongXa?: number | null;
@@ -42,9 +42,8 @@ export interface HoSoNguoiDung {
   soDienThoaiDaXacThuc?: boolean;
   cccdDaMa?: string | null; // đã che bớt, ví dụ 079095******
 }
-export type CapNhatHoSoRequest = Pick<HoSoNguoiDung, "hoTen" | "soDienThoai" | "ngaySinh" | "gioiTinh"> &
-  Partial<Pick<HoSoNguoiDung, "tenGianHang" | "idThanhPho" | "idPhuongXa" | "diaChiChiTiet" | "gioiThieu">>;
-
+export type CapNhatHoSoRequest = Pick<HoSoNguoiDung, "hoTen" | "soDienThoai" | "ngaySinh"> &
+  Partial<Pick<HoSoNguoiDung, "gioiTinh" | "tenGianHang" | "idThanhPho" | "idPhuongXa" | "diaChiChiTiet" | "gioiThieu">>;
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
@@ -172,11 +171,59 @@ export interface DichVu {
   gia: number;
   thoiGianDichVu: number;
 }
+// DTO riêng cho API quản trị, khớp DichVuResponse của backend.
+export interface DichVuQuanTri extends DichVu {
+  luotDay: number;
+  luotDang: number;
+  ngayTao: string;
+  trangThai: string;
+}
+// Request thêm/sửa khớp TaoDichVuRequest và CapNhatDichVuRequest.
+export interface DichVuQuanTriRequest {
+  tenDichVu: string;
+  gia: number;
+  thoiGianDichVu: number;
+  luotDay: number;
+  luotDang: number;
+}
 export interface MuaDichVuResponse {
   idMuaDichVu: number;
   idThanhToan: number;
+  maGiaoDichNgoai: string;
   tenDichVu: string;
   tongTien: number;
   trangThai: string;
+  urlThanhToan: string;
   ngayTao: string;
+}
+export interface PhuongThucThanhToan {
+  id: number;
+  tenPhuongThuc: string;
+  moTa: string | null;
+}
+export interface ThanhToanTrangThai {
+  idThanhToan: number;
+  trangThai: string;
+  tongTien: number;
+  ngayTao: string;
+  ngayThanhToan: string | null;
+}
+export interface LichSuThanhToanDichVu {
+  idThanhToan: number;
+  tongTien: number;
+  trangThai: string;
+  maGiaoDichCongTT: string | null;
+  ngayTao: string;
+  ngayThanhToan: string | null;
+}
+export interface LichSuMuaDichVu {
+  idMuaDichVu: number;
+  idDichVu: number;
+  tenDichVu: string;
+  gia: number;
+  thoiGianDichVu: number;
+  ngayMua: string;
+  ngayHetHan: string | null;
+  trangThai: string;
+  thanhToans: LichSuThanhToanDichVu[];
 }

@@ -51,7 +51,7 @@ public class ThongBaoService : IThongBaoService
                 nameof(ThongBao), idThongBao);
 
         if (tb.IdNguoiDung != idNguoiDung)
-            throw new DomainException(
+            throw new ForbiddenException(
                 "Bạn không có quyền với thông báo này.");
 
         tb.DanhDauDaDoc();

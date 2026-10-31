@@ -1,7 +1,11 @@
 namespace ChoDoCu.Domain.Exceptions;
 
-/// <summary>Người dùng không có quyền thực hiện thao tác trên dữ liệu.</summary>
-public class ForbiddenException : Exception
+/// <summary>Đã đăng nhập nhưng không có quyền thực hiện thao tác. API trả 403.</summary>
+public class ForbiddenException : AppException
 {
-    public ForbiddenException(string message) : base(message) { }
+    public ForbiddenException(string message = "Bạn không có quyền thực hiện thao tác này.")
+        : base(message) { }
+
+    public override int StatusCode => 403;
+    public override string ErrorCode => "FORBIDDEN";
 }

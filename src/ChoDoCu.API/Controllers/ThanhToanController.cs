@@ -41,7 +41,7 @@ public class ThanhToanController : ControllerBase
     [Authorize]
     [HttpPost("mua-dich-vu")]
     public async Task<IActionResult> MuaDichVu(MuaDichVuRequest request)
-        => Ok(await _service.MuaDichVuAsync(
+        => StatusCode(StatusCodes.Status201Created, await _service.MuaDichVuAsync(
             GetUserId(), request, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"));
 
     [Authorize]
