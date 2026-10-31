@@ -20,7 +20,6 @@ public static class DbSeeder
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         await context.Database.MigrateAsync();
-        await CapNhatMaTinCuAsync(context);
 
         // 1. Seed thành phố và phường xã
         // ===== 1. Seed Role + quyền (lưu thành claim trong AspNetRoleClaims) =====
@@ -618,73 +617,6 @@ public static class DbSeeder
             await userManager.AddToRoleAsync(user, AppRoles.User);
 
         return user;
-    }
-
-    private static async Task CapNhatMaTinCuAsync(ApplicationDbContext context)
-    {
-        var idsToFix = (await context.BaiDangs
-            .AsNoTracking()
-            .Where(x => x.MaTin == "CD00000")
-            .Select(x => x.Id)
-            .ToListAsync())
-            .ToHashSet();
-
-        if (idsToFix.Count == 0)
-            return;
-
-        while (true)
-        {
-            var ids = idsToFix.ToArray();
-            if (ids.Any(id => id is <= 0 or > 99_999))
-                throw new InvalidOperationException("Không thể tạo mã tin 5 chữ số cho một bài đăng có ID ngoài khoảng 1 đến 99999.");
-
-            var maTinsMucTieu = ids.Select(id => $"CD{id:D5}").ToArray();
-            var idBiTrung = await context.BaiDangs
-                .AsNoTracking()
-                .Where(x => maTinsMucTieu.Contains(x.MaTin))
-                .Select(x => x.Id)
-                .ToListAsync();
-
-            if (!idBiTrung.Any(idsToFix.Add))
-                break;
-        }
-
-        await using var transaction = await context.Database.BeginTransactionAsync();
-        string? prefixTam = null;
-        foreach (var prefix in new[] { "T", "~", "!", "@", "#" })
-        {
-            var maTinsTam = idsToFix.Select(id => $"{prefix}{id:D5}").ToArray();
-            if (!await context.BaiDangs.AsNoTracking().AnyAsync(x => maTinsTam.Contains(x.MaTin)))
-            {
-                prefixTam = prefix;
-                break;
-            }
-        }
-
-        if (prefixTam is null)
-            throw new InvalidOperationException("Không tìm được mã tạm duy nhất để cập nhật mã tin cũ.");
-
-        foreach (var id in idsToFix)
-        {
-            var maTinTam = $"{prefixTam}{id:D5}";
-            var rowsUpdated = await context.BaiDangs
-                .Where(x => x.Id == id)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.MaTin, maTinTam));
-            if (rowsUpdated != 1)
-                throw new InvalidOperationException($"Không thể cập nhật mã tạm cho bài đăng id={id}.");
-        }
-
-        foreach (var id in idsToFix)
-        {
-            var maTin = $"CD{id:D5}";
-            var rowsUpdated = await context.BaiDangs
-                .Where(x => x.Id == id)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.MaTin, maTin));
-            if (rowsUpdated != 1)
-                throw new InvalidOperationException($"Không thể cập nhật mã tin cho bài đăng id={id}.");
-        }
-
-        await transaction.CommitAsync();
     }
 
     private static async Task SeedPhanQuyenAsync(RoleManager<IdentityRole<int>> roleManager)
