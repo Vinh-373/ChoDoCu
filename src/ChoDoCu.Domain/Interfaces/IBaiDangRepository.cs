@@ -8,10 +8,6 @@ public interface IBaiDangRepository : IRepository<BaiDang>
 {
     /// <summary>Lấy bài đăng kèm sản phẩm, người đăng, danh mục, thành phố, ảnh.</summary>
     Task<BaiDang?> GetChiTietAsync(int id);
-    Task<bool> IsSanPhamUsedByOtherBaiDangAsync(int idSanPham, int idBaiDang);
-    void RemoveWithSanPham(BaiDang baiDang, bool xoaSanPham);
-    Task<IReadOnlyCollection<string>> GetDuongDanDangSuDungAsync(
-        IReadOnlyCollection<string> duongDans);
 
     /// <summary>Lưu bài đăng và cập nhật mã tin theo ID trong cùng một transaction.</summary>
     Task AddWithGeneratedMaTinAsync(BaiDang baiDang);

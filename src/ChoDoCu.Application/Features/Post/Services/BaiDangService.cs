@@ -20,20 +20,17 @@ public class BaiDangService : IBaiDangService
     private readonly IValidator<TaoBaiDangRequest> _validator;
     private readonly IValidator<TuChoiBaiDangRequest> _tuChoiValidator;
     private readonly IThongBaoNotifier _thongBaoNotifier;
-    private readonly IFileStorage _fileStorage;
  
     public BaiDangService(
         IUnitOfWork uow,
         IValidator<TaoBaiDangRequest> validator,
         IValidator<TuChoiBaiDangRequest> tuChoiValidator,
-        IThongBaoNotifier thongBaoNotifier,
-        IFileStorage fileStorage)
+        IThongBaoNotifier thongBaoNotifier)
     {
         _uow = uow;
         _validator = validator;
         _tuChoiValidator = tuChoiValidator;
         _thongBaoNotifier = thongBaoNotifier;
-        _fileStorage = fileStorage;
     }
 
     public async Task<BaiDangResponse> TaoAsync(int idNguoiDung, TaoBaiDangRequest request)
@@ -330,7 +327,7 @@ public class BaiDangService : IBaiDangService
         int idNguoiDung,
         bool chiChoHuyTinChoDuyet)
     {
-        var duongDans = await _uow.ExecuteInTransactionAsync(async () =>
+        await _uow.ExecuteInTransactionAsync(async () =>
         {
             var baiDang = await GetBaiDangCuaNguoiDungAsync(id, idNguoiDung);
             if (chiChoHuyTinChoDuyet && baiDang.TrangThai != TrangThaiBaiDang.ChoDuyet)
@@ -339,24 +336,11 @@ public class BaiDangService : IBaiDangService
             if (chiChoHuyTinChoDuyet && await _uow.NguoiDungs.CongLuotDangAsync(idNguoiDung) != 1)
                 throw new NotFoundException(nameof(NguoiDung), idNguoiDung);
 
-            var paths = baiDang.HinhAnhBaiDangs.Select(h => h.DuongDan)
-                .Concat(baiDang.AnhSanPhams.Select(a => a.Url))
-                .Where(path => !string.IsNullOrWhiteSpace(path))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            var sanPhamConDuocDung = await _uow.BaiDangs.IsSanPhamUsedByOtherBaiDangAsync(
-                baiDang.IdSanPham,
-                baiDang.Id);
-            _uow.BaiDangs.RemoveWithSanPham(baiDang, xoaSanPham: !sanPhamConDuocDung);
+            baiDang.DaXoa = true;
+            baiDang.NgayXoa = DateTime.Now;
             await _uow.SaveChangesAsync();
-            return paths;
+            return true;
         });
-
-        var duongDansConSuDung = await _uow.BaiDangs.GetDuongDanDangSuDungAsync(duongDans);
-        var duongDanConSuDungSet = duongDansConSuDung.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var duongDan in duongDans.Where(path => !duongDanConSuDungSet.Contains(path)))
-            await _fileStorage.DeleteAsync(duongDan);
     }
 
     private static bool ThuocTinhsDaThayDoi(

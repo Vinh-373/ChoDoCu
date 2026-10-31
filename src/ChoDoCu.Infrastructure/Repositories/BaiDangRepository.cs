@@ -34,37 +34,6 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
             .Include(b => b.AnhSanPhams)
             .FirstOrDefaultAsync(b => b.Id == id);
 
-    public Task<bool> IsSanPhamUsedByOtherBaiDangAsync(int idSanPham, int idBaiDang) =>
-        _dbSet.AnyAsync(b => b.IdSanPham == idSanPham && b.Id != idBaiDang);
-
-    public void RemoveWithSanPham(BaiDang baiDang, bool xoaSanPham)
-    {
-        _dbSet.Remove(baiDang);
-        _context.SanPhamThuocTinhs.RemoveRange(baiDang.SanPham.SanPhamThuocTinhs);
-        if (xoaSanPham)
-            _context.SanPhams.Remove(baiDang.SanPham);
-    }
-
-    public async Task<IReadOnlyCollection<string>> GetDuongDanDangSuDungAsync(
-        IReadOnlyCollection<string> duongDans)
-    {
-        if (duongDans.Count == 0)
-            return Array.Empty<string>();
-
-        var hinhAnhBaiDang = await _context.HinhAnhBaiDangs.AsNoTracking()
-            .Where(h => duongDans.Contains(h.DuongDan))
-            .Select(h => h.DuongDan)
-            .Distinct()
-            .ToListAsync();
-        var anhSanPham = await _context.AnhSanPhams.AsNoTracking()
-            .Where(a => duongDans.Contains(a.Url))
-            .Select(a => a.Url)
-            .Distinct()
-            .ToListAsync();
-
-        return hinhAnhBaiDang.Concat(anhSanPham).Distinct().ToArray();
-    }
-
     public async Task<(IReadOnlyList<BaiDang> Items, int TotalCount)> TimKiemAsync(
         int? idDanhMuc,
         int? idThanhPho,

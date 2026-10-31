@@ -2,6 +2,7 @@ using ChoDoCu.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 
@@ -78,7 +79,7 @@ public class ApplicationDbContext : IdentityDbContext<NguoiDung, IdentityRole<in
         {
             if (entry.State == EntityState.Added && string.IsNullOrWhiteSpace(entry.Entity.MaTin))
                 entry.Entity.MaTin = $"T{GetNextMaTinNumber():D5}";
-            else if (entry.State == EntityState.Modified)
+            else if (entry.State == EntityState.Modified && ShouldUpdateNgayCapNhat(entry))
                 entry.Entity.NgayCapNhat = DateTime.Now;
         }
     }
@@ -89,9 +90,18 @@ public class ApplicationDbContext : IdentityDbContext<NguoiDung, IdentityRole<in
         {
             if (entry.State == EntityState.Added && string.IsNullOrWhiteSpace(entry.Entity.MaTin))
                 entry.Entity.MaTin = $"T{await GetNextMaTinNumberAsync(cancellationToken):D5}";
-            else if (entry.State == EntityState.Modified)
+            else if (entry.State == EntityState.Modified && ShouldUpdateNgayCapNhat(entry))
                 entry.Entity.NgayCapNhat = DateTime.Now;
         }
+    }
+
+    private static bool ShouldUpdateNgayCapNhat(EntityEntry<BaiDang> entry)
+    {
+        var modifiedProperties = entry.Properties.Where(property => property.IsModified).ToList();
+        return !(entry.Property(b => b.DaXoa).IsModified
+            && entry.Property(b => b.NgayXoa).IsModified
+            && modifiedProperties.All(property =>
+                property.Metadata.Name is nameof(BaiDang.DaXoa) or nameof(BaiDang.NgayXoa)));
     }
 
     private int GetNextMaTinNumber()

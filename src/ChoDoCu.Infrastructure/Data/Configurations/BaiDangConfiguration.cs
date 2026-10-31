@@ -9,6 +9,7 @@ public class BaiDangConfiguration : IEntityTypeConfiguration<BaiDang>
     public void Configure(EntityTypeBuilder<BaiDang> builder)
     {
         builder.ToTable("baiDang");
+        builder.HasQueryFilter(b => !b.DaXoa);
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("idBaiDang");
 

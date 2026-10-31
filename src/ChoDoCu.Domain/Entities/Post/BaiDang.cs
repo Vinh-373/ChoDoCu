@@ -30,6 +30,8 @@ public class BaiDang : BaseEntity   // Id  <->  cột idBaiDang
     public DateTime NgayCapNhat { get; set; } = DateTime.Now;
     public DateTime? NgayDayTin { get; set; }
     public DateTime? NgayHetHan { get; set; }
+    public bool DaXoa { get; set; }
+    public DateTime? NgayXoa { get; set; }
     public string? LyDoTuChoi { get; set; }
     public TrangThaiBaiDang TrangThai { get; set; } = TrangThaiBaiDang.ChoDuyet;
     public DateTime? UuTien { get; set; }
