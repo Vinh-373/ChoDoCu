@@ -35,7 +35,7 @@ export default function AdminReports() {
 
   return (
     <div className="stack">
-      <h1>Báo cáo vi phạm</h1>
+      <h1 className="admin-page-title">Báo cáo vi phạm</h1>
       <div className="field" style={{ maxWidth: 220 }}>
         <label htmlFor="st">Trạng thái</label>
         <select id="st" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>

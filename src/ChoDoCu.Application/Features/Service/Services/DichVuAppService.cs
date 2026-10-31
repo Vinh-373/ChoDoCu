@@ -87,6 +87,16 @@ public class DichVuAppService : IDichVuService
         await _uow.SaveChangesAsync();
     }
 
+    // Kích hoạt lại gói đã ngừng bán để thao tác trạng thái trên trang quản trị hoạt động hai chiều.
+    public async Task KichHoatAsync(int id)
+    {
+        var dichVu = await _uow.DichVus.GetByIdAsync(id)
+            ?? throw new NotFoundException(nameof(DichVu), id);
+
+        dichVu.TrangThai = "HoatDong";
+        await _uow.SaveChangesAsync();
+    }
+
     // Chuyển đổi entity DichVu thành DTO DichVuResponse
     private static DichVuResponse ToResponse(DichVu x) => new(
         x.Id, x.TenDichVu, x.Gia, x.ThoiGianDichVu,

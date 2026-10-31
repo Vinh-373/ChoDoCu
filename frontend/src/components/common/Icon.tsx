@@ -21,6 +21,12 @@ const paths = {
   grid: (<><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="7" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /><rect x="13" y="13" width="7" height="7" rx="1" /></>),
   flag: (<path d="M5 21V4h11l-1.5 4 1.5 4H5" />),
   send: (<path d="M4 12 20 4l-4 16-4-6-8-2Z" />),
+  download: (<><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></>),
+  refresh: (<><path d="M20 7v5h-5" /><path d="M4.5 9a8 8 0 0 1 13.6-3L20 7M4 17v-5h5" /><path d="M19.5 15a8 8 0 0 1-13.6 3L4 17" /></>),
+  clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>),
+  warning: (<><path d="m12 3 10 18H2L12 3Z" /><path d="M12 9v5M12 18h.01" /></>),
+  payments: (<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M7 15h3" /></>),
+  info: (<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

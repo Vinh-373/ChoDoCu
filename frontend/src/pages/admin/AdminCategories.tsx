@@ -58,7 +58,7 @@ export default function AdminCategories() {
 
   return (
     <div className="stack">
-      <h1>Danh mục</h1>
+      <h1 className="admin-page-title">Danh mục</h1>
       <form className="panel row" onSubmit={add}>
         <div className="field">
           <label htmlFor="n">Tên danh mục mới</label>

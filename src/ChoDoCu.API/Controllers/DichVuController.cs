@@ -42,4 +42,13 @@ public class DichVuController : ControllerBase
         await _service.XoaAsync(id);
         return NoContent();
     }
+
+    // Kích hoạt lại gói đã ngừng bán; dùng cùng quyền sửa gói dịch vụ.
+    [HasPermission(AppPermissions.DichVuSua)]
+    [HttpPut("{id:int}/kich-hoat")]
+    public async Task<IActionResult> KichHoat(int id)
+    {
+        await _service.KichHoatAsync(id);
+        return NoContent();
+    }
 }

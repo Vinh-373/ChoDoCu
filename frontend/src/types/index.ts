@@ -172,11 +172,59 @@ export interface DichVu {
   gia: number;
   thoiGianDichVu: number;
 }
+// DTO riêng cho API quản trị, khớp DichVuResponse của backend.
+export interface DichVuQuanTri extends DichVu {
+  luotDay: number;
+  luotDang: number;
+  ngayTao: string;
+  trangThai: string;
+}
+// Request thêm/sửa khớp TaoDichVuRequest và CapNhatDichVuRequest.
+export interface DichVuQuanTriRequest {
+  tenDichVu: string;
+  gia: number;
+  thoiGianDichVu: number;
+  luotDay: number;
+  luotDang: number;
+}
 export interface MuaDichVuResponse {
   idMuaDichVu: number;
   idThanhToan: number;
+  maGiaoDichNgoai: string;
   tenDichVu: string;
   tongTien: number;
   trangThai: string;
+  urlThanhToan: string;
   ngayTao: string;
+}
+export interface PhuongThucThanhToan {
+  id: number;
+  tenPhuongThuc: string;
+  moTa: string | null;
+}
+export interface ThanhToanTrangThai {
+  idThanhToan: number;
+  trangThai: string;
+  tongTien: number;
+  ngayTao: string;
+  ngayThanhToan: string | null;
+}
+export interface LichSuThanhToanDichVu {
+  idThanhToan: number;
+  tongTien: number;
+  trangThai: string;
+  maGiaoDichCongTT: string | null;
+  ngayTao: string;
+  ngayThanhToan: string | null;
+}
+export interface LichSuMuaDichVu {
+  idMuaDichVu: number;
+  idDichVu: number;
+  tenDichVu: string;
+  gia: number;
+  thoiGianDichVu: number;
+  ngayMua: string;
+  ngayHetHan: string | null;
+  trangThai: string;
+  thanhToans: LichSuThanhToanDichVu[];
 }
