@@ -34,7 +34,7 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
             .Include(b => b.AnhSanPhams)
             .FirstOrDefaultAsync(b => b.Id == id);
 
-    public async Task<(IReadOnlyList<BaiDang> Items, int TotalCount)> TimKiemAsync(
+    public async Task<(IReadOnlyList<(BaiDang BaiDang, bool LaTinUuTien)> Items, int TotalCount)> TimKiemAsync(
         int? idDanhMuc,
         int? idThanhPho,
         int? idPhuongXa,
@@ -95,8 +95,12 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
         var sortedQuery = sapXep switch
         {
             "uuTien" => query
-                .OrderByDescending(b => b.UuTien.HasValue && b.UuTien.Value > now)
-                .ThenByDescending(b => b.NgayDayTin ?? b.NgayDang),
+                .OrderByDescending(b => _context.MuaDichVus.Any(m =>
+                    m.IdNguoiDung == b.IdNguoiDung
+                    && m.TrangThai == TrangThaiThanhToan.ThanhCong
+                    && m.NgayHetHan > now))
+                .ThenByDescending(b => b.NgayDayTin ?? b.NgayDang)
+                .ThenByDescending(b => b.Id),
             "moiNhat" => query
                 .OrderByDescending(b => b.NgayDang),
             "giaTang" => query
@@ -108,11 +112,24 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
             _ => throw new ArgumentOutOfRangeException(nameof(sapXep))
         };
 
-        var items = await sortedQuery
-            .ThenByDescending(b => b.Id)
+        if (sapXep != "uuTien")
+            sortedQuery = sortedQuery
+                .ThenByDescending(b => b.NgayDang)
+                .ThenByDescending(b => b.Id);
+
+        var ketQua = await sortedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(b => new
+            {
+                BaiDang = b,
+                LaTinUuTien = _context.MuaDichVus.Any(m =>
+                    m.IdNguoiDung == b.IdNguoiDung
+                    && m.TrangThai == TrangThaiThanhToan.ThanhCong
+                    && m.NgayHetHan > now)
+            })
             .ToListAsync();
+        var items = ketQua.Select(x => (x.BaiDang, x.LaTinUuTien)).ToList();
 
         return (items, total);
     }
@@ -188,6 +205,43 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
         return (items, total);
     }
 
+    public async Task<(IReadOnlyList<TProjection> Items, int TotalCount)> DanhSachQuanTriAsync<TProjection>(
+        TrangThaiBaiDang? trangThai,
+        string? keyword,
+        int? idDanhMuc,
+        int page,
+        int pageSize,
+        Expression<Func<BaiDang, TProjection>> selector)
+    {
+        var query = _dbSet.AsNoTracking().Where(b => !b.DaXoa);
+
+        if (trangThai.HasValue)
+            query = query.Where(b => b.TrangThai == trangThai.Value);
+        if (idDanhMuc.HasValue)
+            query = query.Where(b => b.IdDanhMuc == idDanhMuc.Value);
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var tuKhoa = keyword.Trim();
+            query = query.Where(b =>
+                b.TieuDe.Contains(tuKhoa)
+                || b.MaTin.Contains(tuKhoa)
+                || b.NguoiDung.HoTen.Contains(tuKhoa)
+                || b.NguoiDung.SoDienThoai.Contains(tuKhoa));
+        }
+
+        var total = await query.CountAsync();
+        var sortedQuery = trangThai == TrangThaiBaiDang.ChoDuyet
+            ? query.OrderBy(b => b.NgayDang).ThenBy(b => b.Id)
+            : query.OrderByDescending(b => b.NgayDang).ThenByDescending(b => b.Id);
+        var items = await sortedQuery
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(selector)
+            .ToListAsync();
+
+        return (items, total);
+    }
+
     public async Task<IReadOnlyDictionary<TrangThaiBaiDang, int>> ThongKeCuaToiAsync(int idNguoiDung)
     {
         var counts = await _dbSet.AsNoTracking()
@@ -197,6 +251,22 @@ public class BaiDangRepository : Repository<BaiDang>, IBaiDangRepository
             .ToDictionaryAsync(x => x.TrangThai, x => x.SoLuong);
 
         return counts;
+    }
+
+    public async Task<(IReadOnlyDictionary<TrangThaiBaiDang, int> ByStatus, int TodayCount)> ThongKeQuanTriAsync(
+        DateTime ngayHomNay)
+    {
+        var byStatus = await _dbSet.AsNoTracking()
+            .Where(b => !b.DaXoa)
+            .GroupBy(b => b.TrangThai)
+            .Select(group => new { TrangThai = group.Key, SoLuong = group.Count() })
+            .ToDictionaryAsync(x => x.TrangThai, x => x.SoLuong);
+
+        var ngayMai = ngayHomNay.AddDays(1);
+        var todayCount = await _dbSet.AsNoTracking()
+            .CountAsync(b => !b.DaXoa && b.NgayDang >= ngayHomNay && b.NgayDang < ngayMai);
+
+        return (byStatus, todayCount);
     }
 
     public Task<TProjection?> GetChiTietProjectionAsync<TProjection>(

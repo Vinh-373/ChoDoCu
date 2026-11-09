@@ -11,20 +11,28 @@ interface Props {
   anh?: string | null;
   noiTrongTin?: string; // ví dụ tên thành phố
   ngay?: string;
+  laTinUuTien?: boolean;
+  ngayDayTin?: string | null;
   trangThai?: string;
 }
 
 /** Thẻ tin đăng. Giá nằm trên "tem giá" có lỗ xỏ dây – chi tiết nhận diện của chợ. */
-export default function PostCard({ id, tieuDe, giaTien, anh, noiTrongTin, ngay, trangThai }: Props) {
+export default function PostCard({ id, tieuDe, giaTien, anh, noiTrongTin, ngay, laTinUuTien, ngayDayTin, trangThai }: Props) {
   const fav = useFavorites();
   const saved = fav.has(id);
+  const pushedAt = ngayDayTin ? new Date(ngayDayTin).getTime() : Number.NaN;
+  const pushedRecently = Number.isFinite(pushedAt) && Date.now() >= pushedAt && Date.now() - pushedAt <= 3 * 24 * 60 * 60 * 1000;
 
   return (
     <article className="post-card">
       <Link to={`/bai-dang/${id}`} className="post-card-media" aria-label={tieuDe}>
         <img src={imgSrc(anh)} alt="" loading="lazy" onError={onImgError} />
-        {trangThai && trangThai !== "DaDuyet" && (
-          <span className="badge badge-status">{TRANG_THAI_BAI_DANG[trangThai] ?? trangThai}</span>
+        {(laTinUuTien || pushedRecently || (trangThai && trangThai !== "DaDuyet")) && (
+          <span className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1">
+            {laTinUuTien && <span className="rounded-full bg-primary px-space-sm py-space-2xs text-caption-bold text-on-primary">Ưu tiên</span>}
+            {pushedRecently && <span className="rounded-full bg-secondary-container px-space-sm py-space-2xs text-caption-bold text-on-secondary-container">Đã đẩy</span>}
+            {trangThai && trangThai !== "DaDuyet" && <span className="badge badge-status !static">{TRANG_THAI_BAI_DANG[trangThai] ?? trangThai}</span>}
+          </span>
         )}
       </Link>
       <button

@@ -20,7 +20,8 @@ const SEGMENTS: Record<string, Segment> = {
   result: { label: "Kết quả giao dịch" },
   "dang-nhap": { label: "Đăng nhập", to: "/dang-nhap" },
   "dang-ky": { label: "Đăng ký", to: "/dang-ky" },
-  "dang-bai": { label: "Đăng tin", to: "/dang-bai" },
+  "dang-tin": { label: "Đăng tin", to: "/dang-tin" },
+  "dang-bai": { label: "Đăng tin", to: "/dang-tin" },
   "yeu-thich": { label: "Tin đã lưu", to: "/yeu-thich" },
   "thong-bao": { label: "Thông báo" },
   "tin-nhan": { label: "Tin nhắn", to: "/tin-nhan" },
@@ -34,6 +35,7 @@ const SEGMENTS: Record<string, Segment> = {
 /** Thanh đường dẫn dưới header, dựng từ URL hiện tại. Trang chủ không hiện. */
 export default function Breadcrumbs() {
   const { pathname } = useLocation();
+  if (/^\/bai-dang\/\d+$/.test(pathname)) return null;
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return null;
 

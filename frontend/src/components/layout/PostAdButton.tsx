@@ -5,7 +5,7 @@ import MaterialIcon from "../common/MaterialIcon";
 export default function PostAdButton() {
   return (
     <Link
-      to="/dang-bai"
+      to="/dang-tin"
       className="h-11 px-space-lg bg-primary-container text-on-primary font-button-text text-button-text rounded-xl hover:bg-primary hover:no-underline no-underline transition-colors flex items-center justify-center gap-space-xs shadow-md shrink-0"
     >
       <MaterialIcon name="add_circle" size={22} />

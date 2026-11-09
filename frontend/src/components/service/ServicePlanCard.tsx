@@ -23,7 +23,6 @@ export default function ServicePlanCard({ service, index, busy, onBuy }: Props) 
 
       <div className="service-plan-copy">
         <h3>{service.tenDichVu}</h3>
-        <p>Ưu tiên hiển thị tin đăng trong {service.thoiGianDichVu} ngày.</p>
       </div>
 
       <div className="service-plan-price">
@@ -32,9 +31,9 @@ export default function ServicePlanCard({ service, index, busy, onBuy }: Props) 
       </div>
 
       <ul className="service-plan-benefits">
-        <li><span aria-hidden="true">✓</span> Tin đăng được ưu tiên hiển thị</li>
-        <li><span aria-hidden="true">✓</span> Thời hạn rõ ràng: {service.thoiGianDichVu} ngày</li>
-        <li><span aria-hidden="true">✓</span> Thanh toán an toàn qua hệ thống</li>
+        {service.luotDang > 0 && <li><span aria-hidden="true">✓</span> +{service.luotDang} lượt đăng tin</li>}
+        {service.luotDay > 0 && <li><span aria-hidden="true">✓</span> +{service.luotDay} lượt đẩy tin</li>}
+        <li><span aria-hidden="true">✓</span> Ưu tiên hiển thị tin đăng trong {service.thoiGianDichVu} ngày</li>
       </ul>
 
       <button

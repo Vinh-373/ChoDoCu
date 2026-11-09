@@ -8,6 +8,24 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useFetch } from "../../hooks/useFetch";
+import useQuota from "../../hooks/useQuota";
+
+function QuotaSummary() {
+  const quota = useQuota();
+
+  if (quota.loading) {
+    return <p className="service-quota-summary">Đang tải lượt sử dụng…</p>;
+  }
+  if (quota.error) {
+    return <div className="service-quota-summary"><ErrorBox message={quota.error} onRetry={quota.reload} /></div>;
+  }
+
+  return (
+    <p className="service-quota-summary">
+      Bạn đang có {quota.luotDang} lượt đăng · {quota.luotDay} lượt đẩy
+    </p>
+  );
+}
 
 export default function ServicesPage() {
   useDocumentTitle("Gói dịch vụ");
@@ -35,6 +53,7 @@ export default function ServicesPage() {
       </nav>
       <main className="service-page-content">
         <ServiceHero />
+        {user && <QuotaSummary />}
 
         {loading ? (
           <div className="service-state"><Spinner /></div>

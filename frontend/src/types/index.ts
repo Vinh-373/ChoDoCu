@@ -41,6 +41,8 @@ export interface HoSoNguoiDung {
   gioiThieu?: string | null;
   soDienThoaiDaXacThuc?: boolean;
   cccdDaMa?: string | null; // đã che bớt, ví dụ 079095******
+  luotDang: number;
+  luotDay: number;
 }
 export type CapNhatHoSoRequest = Pick<HoSoNguoiDung, "hoTen" | "soDienThoai" | "ngaySinh"> &
   Partial<Pick<HoSoNguoiDung, "gioiTinh" | "tenGianHang" | "idThanhPho" | "idPhuongXa" | "diaChiChiTiet" | "gioiThieu">>;
@@ -53,10 +55,72 @@ export interface PagedResult<T> {
 }
 
 // ---- Bài đăng ----
-export type TrangThaiBaiDang = "ChoDuyet" | "DaDuyet" | "TuChoi" | "DaAn";
+export type TrangThaiBaiDang = "ChoDuyet" | "DaDuyet" | "BiTuChoi" | "DaAn" | "DaBan";
 
 export interface BaiDang {
   id: number;
+  maTin?: string;
+  tieuDe: string;
+  noiDung: string;
+  tenSanPham: string;
+  giaTien: number;
+  diaChi: string;
+  diaChiChiTiet: string;
+  ngayDang: string;
+  ngayDayTin?: string | null;
+  laTinUuTien?: boolean;
+  trangThai: TrangThaiBaiDang;
+  idNguoiDung: number;
+  idDanhMuc?: number | null;
+  idThanhPho?: number | null;
+  idPhuongXa?: number | null;
+  tenNguoiDang: string;
+  tenDanhMuc: string;
+  tenThanhPho: string;
+  anhs: string[];
+  anhBia?: string | null;
+  tenDanhMucDayDu?: string | null;
+  khuVuc?: string | null;
+  soDienThoaiLienHe?: string | null;
+  coThuongLuong?: boolean | null;
+  giaChotNhanh?: boolean | null;
+  choPhepChat?: boolean | null;
+  lyDoTuChoi?: string | null;
+  ngayHetHan?: string | null;
+  daHetHan?: boolean;
+  luotXem?: number;
+  luotLuu?: number;
+  soCuocChat?: number;
+  nguoiBan?: NguoiBanResponse | null;
+  thuocTinhs?: BaiDangThuocTinhResponse[] | null;
+  thuocTinhsDeSua?: BaiDangThuocTinhSuaResponse[] | null;
+  danhSachMedia?: BaiDangMediaResponse[] | null;
+}
+
+export interface BaiDangMediaResponse {
+  duongDan: string;
+  laVideo: boolean;
+}
+
+export interface NguoiBanResponse {
+  id: number;
+  hoTen: string;
+  anhNguoiDung: string | null;
+}
+
+export interface BaiDangThuocTinhResponse {
+  tenThuocTinh: string;
+  tenGiaTri: string;
+}
+
+export interface BaiDangThuocTinhSuaResponse {
+  idThuocTinh: number;
+  giaTri: string;
+}
+
+export interface BaiDangChiTietProjection {
+  id: number;
+  maTin: string;
   tieuDe: string;
   noiDung: string;
   tenSanPham: string;
@@ -67,27 +131,158 @@ export interface BaiDang {
   trangThai: TrangThaiBaiDang;
   idNguoiDung: number;
   tenNguoiDang: string;
+  anhNguoiDang: string | null;
   tenDanhMuc: string;
   tenThanhPho: string;
-  anhs: string[];
+  tenDanhMucDayDu: string;
+  khuVuc: string;
+  soDienThoaiLienHe: string;
+  coThuongLuong: boolean;
+  giaChotNhanh: boolean;
+  choPhepChat: boolean;
+  lyDoTuChoi: string | null;
+  luotXem: number;
+  luotLuu: number;
 }
-export interface TaoBaiDangRequest {
+
+export interface BaiDangCuaToiResponse {
+  id: number;
+  anhBia: string | null;
   tieuDe: string;
-  noiDung: string;
-  tenSanPham: string;
   giaTien: number;
-  moTa: string;
+  tenDanhMuc: string;
+  maTin: string;
+  ngayDang: string;
+  khuVuc: string;
+  luotXem: number;
+  luotLuu: number;
+  trangThai: TrangThaiBaiDang;
+  lyDoTuChoi: string | null;
+  ngayHetHan: string | null;
+  daHetHan: boolean;
+}
+
+export interface BaiDangChoDuyetResponse {
+  id: number;
+  maTin: string;
+  tieuDe: string;
+  giaTien: number;
+  anhBia: string | null;
+  tenDanhMuc: string;
+  nguoiDang: NguoiDangChoDuyetResponse;
+  ngayDang: string;
+  khuVuc: string;
+}
+
+export interface BaiDangQuanTriResponse {
+  id: number;
+  maTin: string;
+  tieuDe: string;
+  giaTien: number;
+  coThuongLuong: boolean;
+  anhBia: string | null;
+  tenDanhMuc: string;
+  nguoiDang: {
+    id: number;
+    ten: string;
+    soDienThoai: string;
+  };
+  ngayDang: string;
+  khuVuc: string;
+  trangThai: TrangThaiBaiDang;
+  lyDoTuChoi: string | null;
+}
+
+export interface BaiDangQuanTriParams {
+  trangThai?: TrangThaiBaiDang;
+  keyword?: string;
+  idDanhMuc?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ThongKeQuanTriResponse {
+  tongSo: number;
+  choDuyet: number;
+  daDuyet: number;
+  biTuChoi: number;
+  daAn: number;
+  daBan: number;
+  moiHomNay: number;
+}
+
+export interface NguoiDangChoDuyetResponse {
+  id: number;
+  ten: string;
+}
+
+export interface ThongKeTrangThaiBaiDang {
+  trangThai: string;
+  soLuong: number;
+}
+
+export interface ThongKeBaiDangResponse {
+  theoTrangThai: ThongKeTrangThaiBaiDang[];
+  tongSo: number;
+}
+
+export interface TaoBaiDangThuocTinhRequest {
+  idThuocTinh: number;
+  giaTri: string;
+}
+
+export interface TaoBaiDangHinhAnhRequest {
+  duongDan: string;
+  laVideo: boolean;
+  laAnhBia: boolean;
+}
+
+export interface TaoBaiDangRequest {
   idDanhMuc: number;
+  moTa: string;
+  gia: number;
+  coThuongLuong: boolean;
+  giaChotNhanh: boolean;
   idThanhPho: number;
   idPhuongXa: number | null;
-  diaChi: string;
-  diaChiChiTiet: string;
-  urlAnhs: string[];
+  diaChiChiTiet: string | null;
+  soDienThoaiLienHe: string | null;
+  choPhepChat: boolean;
+  tieuDe?: string | null;
+  thuocTinhs: TaoBaiDangThuocTinhRequest[];
+  danhSachHinhAnh: TaoBaiDangHinhAnhRequest[];
 }
+
+export type SuaBaiDangRequest = TaoBaiDangRequest;
+
+export interface TuChoiBaiDangRequest {
+  lyDo: string;
+}
+
 export interface TimBaiDangParams {
+  keyword?: string;
   idDanhMuc?: number;
   idThanhPho?: number;
-  tuKhoa?: string;
+  idPhuongXa?: number;
+  giaTu?: number;
+  giaDen?: number;
+  sapXep?: "uuTien" | "moiNhat" | "giaTang" | "giaGiam" | "xemNhieu";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface BaiDangCuaToiParams {
+  trangThai?: TrangThaiBaiDang;
+  keyword?: string;
+  idDanhMuc?: number;
+  sapXep?: "moiNhat" | "cuNhat" | "giaTang" | "giaGiam" | "xemNhieu";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface BaiDangChoDuyetParams {
+  keyword?: string;
+  idDanhMuc?: number;
   page?: number;
   pageSize?: number;
 }
@@ -100,6 +295,20 @@ export interface DanhMuc {
   anhDanhMuc: string | null;
   trangThai: string;
   danhMucCons: DanhMuc[];
+}
+export interface DanhMucGiaTriLuaChon {
+  giaTri: string;
+  ten: string;
+  idGiaTriCha: string | number | null;
+}
+export interface DanhMucThuocTinh {
+  id: number;
+  tenThuocTinh: string;
+  kieuDuLieu: "LuaChon" | "So";
+  batBuoc: boolean;
+  danhSachLuaChon: DanhMucGiaTriLuaChon[];
+  thuTu: number;
+  idThuocTinhCha: number | null;
 }
 export interface ThanhPho {
   id: number;
@@ -170,6 +379,8 @@ export interface DichVu {
   tenDichVu: string;
   gia: number;
   thoiGianDichVu: number;
+  luotDang: number;
+  luotDay: number;
 }
 // DTO riêng cho API quản trị, khớp DichVuResponse của backend.
 export interface DichVuQuanTri extends DichVu {

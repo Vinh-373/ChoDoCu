@@ -16,4 +16,4 @@ public record ThuocTinhDanhMucResponse(
     int ThuTu,
     int? IdThuocTinhCha);
 
-public record ThuocTinhLuaChonResponse(string GiaTri, string Ten, int? IdGiaTriCha = null);
+public record ThuocTinhLuaChonResponse(string GiaTri, string Ten, string? IdGiaTriCha = null);

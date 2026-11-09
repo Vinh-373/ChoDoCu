@@ -13,7 +13,7 @@ public interface IBaiDangRepository : IRepository<BaiDang>
     Task AddWithGeneratedMaTinAsync(BaiDang baiDang);
 
     /// <summary>Tìm các bài ĐÃ DUYỆT, có phân trang. Bài ưu tiên (mua gói) lên đầu.</summary>
-    Task<(IReadOnlyList<BaiDang> Items, int TotalCount)> TimKiemAsync(
+    Task<(IReadOnlyList<(BaiDang BaiDang, bool LaTinUuTien)> Items, int TotalCount)> TimKiemAsync(
         int? idDanhMuc,
         int? idThanhPho,
         int? idPhuongXa,
@@ -41,7 +41,17 @@ public interface IBaiDangRepository : IRepository<BaiDang>
         int pageSize,
         Expression<Func<BaiDang, TProjection>> selector);
 
+    Task<(IReadOnlyList<TProjection> Items, int TotalCount)> DanhSachQuanTriAsync<TProjection>(
+        TrangThaiBaiDang? trangThai,
+        string? keyword,
+        int? idDanhMuc,
+        int page,
+        int pageSize,
+        Expression<Func<BaiDang, TProjection>> selector);
+
     Task<IReadOnlyDictionary<TrangThaiBaiDang, int>> ThongKeCuaToiAsync(int idNguoiDung);
+    Task<(IReadOnlyDictionary<TrangThaiBaiDang, int> ByStatus, int TodayCount)> ThongKeQuanTriAsync(
+        DateTime ngayHomNay);
 
     Task<TProjection?> GetChiTietProjectionAsync<TProjection>(
         int id,

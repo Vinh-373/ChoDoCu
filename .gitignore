@@ -490,3 +490,7 @@ $RECYCLE.BIN/
 !src/ChoDoCu.Infrastructure/Migrations/*.cs
 
 !src/ChoDoCu.API/appsettings.json
+
+# File cục bộ, không đưa lên git
+repomix-output.xml
+src/ChoDoCu.API/wwwroot/uploads/

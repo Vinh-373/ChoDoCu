@@ -7,6 +7,7 @@ using ChoDoCu.Domain.Enums;
 using ChoDoCu.Domain.Exceptions;
 using ChoDoCu.Domain.Interfaces;
 using FluentValidation;
+using FluentValidation.Results;
 using ChoDoCu.Application.Common.Interfaces;
 using ChoDoCu.Application.Features.Notification.DTOs;
 
@@ -150,6 +151,12 @@ public class BaiDangService : IBaiDangService
 
             if (coThayDoiCanDuyetLai)
             {
+                if (baiDang.TrangThai == TrangThaiBaiDang.BiTuChoi
+                    && !await _uow.NguoiDungs.TryTruLuotDangAsync(idNguoiDung))
+                {
+                    throw new DomainException("Bạn đã hết lượt đăng tin. Vui lòng mua gói dịch vụ.");
+                }
+
                 baiDang.TrangThai = TrangThaiBaiDang.ChoDuyet;
                 baiDang.LyDoTuChoi = null;
             }
@@ -266,7 +273,10 @@ public class BaiDangService : IBaiDangService
             if (hang is null || dongSanPham is null || thuocTinhNam is null
                 || !giaTriTheoThuocTinh.TryGetValue(thuocTinhNam.Id, out var namSanXuat))
             {
-                throw new DomainException("Cần có thuộc tính hãng xe, dòng xe và năm sản xuất để tự tạo tiêu đề.");
+                throw new ValidationException(new[]
+                {
+                    new ValidationFailure(nameof(TaoBaiDangRequest.TieuDe), "Vui lòng nhập tiêu đề tin đăng.")
+                });
             }
 
             tieuDe = $"{hang.TenHang} {dongSanPham.TenDongSanPham} {namSanXuat}".Trim();
@@ -465,7 +475,16 @@ public class BaiDangService : IBaiDangService
             b.ChoPhepChat,
             b.LyDoTuChoi,
             b.LuotXem,
-            b.YeuThichs.Count))
+            b.YeuThichs.Count,
+            b.NgayHetHan,
+            b.NgayHetHan.HasValue && b.NgayHetHan.Value <= DateTime.Now,
+            b.IdDanhMuc,
+            b.IdThanhPho,
+            b.IdPhuongXa,
+            b.NgayDayTin,
+            b.NguoiDung.MuaDichVus.Any(m =>
+                m.TrangThai == TrangThaiThanhToan.ThanhCong
+                && m.NgayHetHan > DateTime.Now)))
             ?? throw new NotFoundException(nameof(BaiDang), id);
 
         // Bài chưa duyệt / bị từ chối chỉ chủ bài hoặc Admin được xem
@@ -486,7 +505,8 @@ public class BaiDangService : IBaiDangService
             t => new BaiDangThuocTinhProjection(
                 t.ThuocTinh.TenThuocTinh,
                 t.GiaTri,
-                t.ThuocTinh.DanhSachGiaTriLuaChon));
+                t.ThuocTinh.DanhSachGiaTriLuaChon,
+                t.IdThuocTinh));
 
         if (idNguoiXem != baiDang.IdNguoiDung)
             await _uow.BaiDangs.TangLuotXemAsync(id);
@@ -523,7 +543,20 @@ public class BaiDangService : IBaiDangService
                 t.TenThuocTinh,
                 t.DanhSachGiaTriLuaChon.FirstOrDefault(value =>
                     string.Equals(value, t.GiaTri, StringComparison.OrdinalIgnoreCase))
-                    ?? t.GiaTri ?? string.Empty)).ToList());
+                    ?? t.GiaTri ?? string.Empty)).ToList(),
+            hinhAnhs.Select(h => new BaiDangMediaResponse(h.DuongDan, h.LaVideo))
+                .Concat(anhSanPhams.Select(a => new BaiDangMediaResponse(a.Url, false)))
+                .ToList(),
+            baiDang.NgayHetHan,
+            baiDang.DaHetHan,
+            baiDang.IdDanhMuc,
+            baiDang.IdThanhPho,
+            baiDang.IdPhuongXa,
+            thuocTinhs.Select(t => new BaiDangThuocTinhSuaResponse(
+                t.IdThuocTinh,
+                t.GiaTri ?? string.Empty)).ToList(),
+            baiDang.NgayDayTin,
+            baiDang.LaTinUuTien);
     }
 
     public async Task<PagedResult<BaiDangResponse>> TimKiemAsync(
@@ -537,6 +570,8 @@ public class BaiDangService : IBaiDangService
         int page,
         int pageSize)
     {
+        if (giaTu < 0 || giaDen < 0)
+            throw new DomainException("Giá không được là số âm.");
         if (giaTu.HasValue && giaDen.HasValue && giaTu.Value > giaDen.Value)
             throw new DomainException("Giá từ không được lớn hơn giá đến.");
 
@@ -558,7 +593,11 @@ public class BaiDangService : IBaiDangService
             sapXepHopLe,
             page,
             pageSize);
-        return new PagedResult<BaiDangResponse>(items.Select(x => x.ToResponse()).ToList(), total, page, pageSize);
+        return new PagedResult<BaiDangResponse>(
+            items.Select(x => x.BaiDang.ToResponse(x.LaTinUuTien)).ToList(),
+            total,
+            page,
+            pageSize);
     }
 
     public async Task<PagedResult<BaiDangCuaToiResponse>> DanhSachCuaToiAsync(
@@ -646,6 +685,60 @@ public class BaiDangService : IBaiDangService
                     : b.PhuongXa.TenPhuongXa + ", " + b.ThanhPho.TenThanhPho));
 
         return new PagedResult<BaiDangChoDuyetResponse>(items, total, page, pageSize);
+    }
+
+    public async Task<PagedResult<BaiDangQuanTriResponse>> DanhSachQuanTriAsync(
+        TrangThaiBaiDang? trangThai,
+        string? keyword,
+        int? idDanhMuc,
+        int page,
+        int pageSize)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+
+        var (items, total) = await _uow.BaiDangs.DanhSachQuanTriAsync(
+            trangThai,
+            keyword,
+            idDanhMuc,
+            page,
+            pageSize,
+            b => new BaiDangQuanTriResponse(
+                b.Id,
+                b.MaTin,
+                b.TieuDe,
+                b.Gia,
+                b.CoThuongLuong,
+                b.HinhAnhBaiDangs.Where(h => h.LaAnhBia).OrderBy(h => h.ThuTu)
+                    .Select(h => h.DuongDan).FirstOrDefault()
+                    ?? b.HinhAnhBaiDangs.OrderBy(h => h.ThuTu).Select(h => h.DuongDan).FirstOrDefault()
+                    ?? b.AnhSanPhams.Select(a => a.Url).FirstOrDefault(),
+                b.DanhMuc.DanhMucCha == null
+                    ? b.DanhMuc.TenDanhMuc
+                    : b.DanhMuc.DanhMucCha.TenDanhMuc + " > " + b.DanhMuc.TenDanhMuc,
+                new NguoiDangQuanTriResponse(b.IdNguoiDung, b.NguoiDung.HoTen, b.NguoiDung.SoDienThoai),
+                b.NgayDang,
+                b.PhuongXa == null
+                    ? b.ThanhPho.TenThanhPho
+                    : b.PhuongXa.TenPhuongXa + ", " + b.ThanhPho.TenThanhPho,
+                b.TrangThai.ToString(),
+                b.LyDoTuChoi));
+
+        return new PagedResult<BaiDangQuanTriResponse>(items, total, page, pageSize);
+    }
+
+    public async Task<ThongKeBaiDangQuanTriResponse> ThongKeQuanTriAsync()
+    {
+        var (byStatus, todayCount) = await _uow.BaiDangs.ThongKeQuanTriAsync(DateTime.Today);
+
+        return new ThongKeBaiDangQuanTriResponse(
+            byStatus.Values.Sum(),
+            byStatus.GetValueOrDefault(TrangThaiBaiDang.ChoDuyet),
+            byStatus.GetValueOrDefault(TrangThaiBaiDang.DaDuyet),
+            byStatus.GetValueOrDefault(TrangThaiBaiDang.BiTuChoi),
+            byStatus.GetValueOrDefault(TrangThaiBaiDang.DaAn),
+            byStatus.GetValueOrDefault(TrangThaiBaiDang.DaBan),
+            todayCount);
     }
 
     public async Task<ThongKeBaiDangResponse> ThongKeCuaToiAsync(int idNguoiDung)

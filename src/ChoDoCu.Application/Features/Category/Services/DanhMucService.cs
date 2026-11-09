@@ -52,7 +52,7 @@ public class DanhMucService : IDanhMucService
                     x.Id.ToString(), x.TenHang ?? string.Empty)).ToList()
                 : idThuocTinhHang.HasValue && thuocTinh.IdThuocTinhCha == idThuocTinhHang
                     ? dongSanPhams.Select(x => new ThuocTinhLuaChonResponse(
-                        x.Id.ToString(), x.TenDongSanPham ?? string.Empty, x.IdHang)).ToList()
+                        x.Id.ToString(), x.TenDongSanPham ?? string.Empty, x.IdHang.ToString())).ToList()
                     : thuocTinh.DanhSachGiaTriLuaChon
                         .Select(x => new ThuocTinhLuaChonResponse(x, x))
                         .ToList();

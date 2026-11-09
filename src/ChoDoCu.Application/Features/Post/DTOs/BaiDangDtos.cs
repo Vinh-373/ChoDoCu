@@ -49,8 +49,19 @@ public record BaiDangResponse(
     int LuotLuu = 0,
     int SoCuocChat = 0,
     NguoiBanResponse? NguoiBan = null,
-    List<BaiDangThuocTinhResponse>? ThuocTinhs = null
+    List<BaiDangThuocTinhResponse>? ThuocTinhs = null,
+    List<BaiDangMediaResponse>? DanhSachMedia = null,
+    DateTime? NgayHetHan = null,
+    bool DaHetHan = false,
+    int? IdDanhMuc = null,
+    int? IdThanhPho = null,
+    int? IdPhuongXa = null,
+    List<BaiDangThuocTinhSuaResponse>? ThuocTinhsDeSua = null,
+    DateTime? NgayDayTin = null,
+    bool LaTinUuTien = false
 );
+
+public record BaiDangMediaResponse(string DuongDan, bool LaVideo);
 
 public record BaiDangCuaToiResponse(
     int Id,
@@ -83,14 +94,33 @@ public record BaiDangChoDuyetResponse(
 
 public record NguoiDangChoDuyetResponse(int Id, string Ten);
 
+public record BaiDangQuanTriResponse(
+    int Id,
+    string MaTin,
+    string TieuDe,
+    decimal GiaTien,
+    bool CoThuongLuong,
+    string? AnhBia,
+    string TenDanhMuc,
+    NguoiDangQuanTriResponse NguoiDang,
+    DateTime NgayDang,
+    string KhuVuc,
+    string TrangThai,
+    string? LyDoTuChoi
+);
+
+public record NguoiDangQuanTriResponse(int Id, string Ten, string SoDienThoai);
+
 public record TuChoiBaiDangRequest(string? LyDo);
 
 public record BaiDangThuocTinhResponse(string TenThuocTinh, string TenGiaTri);
+public record BaiDangThuocTinhSuaResponse(int IdThuocTinh, string GiaTri);
 
 public record BaiDangThuocTinhProjection(
     string TenThuocTinh,
     string? GiaTri,
-    List<string> DanhSachGiaTriLuaChon
+    List<string> DanhSachGiaTriLuaChon,
+    int IdThuocTinh
 );
 
 public record BaiDangChiTietProjection(
@@ -117,7 +147,14 @@ public record BaiDangChiTietProjection(
     bool ChoPhepChat,
     string? LyDoTuChoi,
     int LuotXem,
-    int LuotLuu
+    int LuotLuu,
+    DateTime? NgayHetHan,
+    bool DaHetHan,
+    int IdDanhMuc,
+    int IdThanhPho,
+    int? IdPhuongXa,
+    DateTime? NgayDayTin,
+    bool LaTinUuTien
 );
 
 public record ThongKeTrangThaiBaiDang(string TrangThai, int SoLuong);
@@ -125,6 +162,16 @@ public record ThongKeTrangThaiBaiDang(string TrangThai, int SoLuong);
 public record ThongKeBaiDangResponse(
     IReadOnlyList<ThongKeTrangThaiBaiDang> TheoTrangThai,
     int TongSo
+);
+
+public record ThongKeBaiDangQuanTriResponse(
+    int TongSo,
+    int ChoDuyet,
+    int DaDuyet,
+    int BiTuChoi,
+    int DaAn,
+    int DaBan,
+    int MoiHomNay
 );
 
 public record NguoiBanResponse(int Id, string HoTen, string? AnhNguoiDung);

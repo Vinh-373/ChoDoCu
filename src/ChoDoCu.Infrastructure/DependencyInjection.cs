@@ -1,4 +1,5 @@
 using ChoDoCu.Application.Common.Interfaces;
+using ChoDoCu.Application.Features.Post;
 using ChoDoCu.Domain.Entities;
 using ChoDoCu.Domain.Interfaces;
 using ChoDoCu.Infrastructure.Data;
@@ -42,6 +43,7 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();                  // Cần cho quên mật khẩu, xác thực email...
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<BaiDangSettings>(configuration.GetSection("BaiDang"));
         // Đọc thông tin merchant/URL/khóa bí mật từ hai nhánh cấu hình thanh toán.
         services.Configure<MoMoSettings>(configuration.GetSection("Payment:MoMo"));
         services.Configure<VnPaySettings>(configuration.GetSection("Payment:VnPay"));

@@ -1,7 +1,10 @@
 import client from "./client";
-import type { DanhMuc } from "../types";
+import type { DanhMuc, DanhMucThuocTinh } from "../types";
 
 export const danhMucApi = {
+  layCay: () => client.get<DanhMuc[]>("/danh-muc").then((r) => r.data),
+  layThuocTinh: (id: number) =>
+    client.get<DanhMucThuocTinh[]>(`/danh-muc/${id}/thuoc-tinh`).then((r) => r.data),
   cay: () => client.get<DanhMuc[]>("/danh-muc").then((r) => r.data),
   tao: (data: { idDanhMucCha: number | null; tenDanhMuc: string; anhDanhMuc?: string | null }) =>
     client.post<DanhMuc>("/danh-muc", data).then((r) => r.data),

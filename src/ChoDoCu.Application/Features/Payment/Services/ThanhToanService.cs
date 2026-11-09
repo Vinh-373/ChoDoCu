@@ -205,11 +205,10 @@ public class ThanhToanService : IThanhToanService
         if (thanhToan.TrangThai != TrangThaiThanhToan.ChoXuLy)
             return;
 
-        thanhToan.MaGiaoDichCongTT = ketQua.MaGiaoDichCongTT;
-        thanhToan.MaPhanHoiCongTT = ketQua.MaPhanHoiCongTT;
-
         if (!ketQua.ThanhCong)
         {
+            thanhToan.MaGiaoDichCongTT = ketQua.MaGiaoDichCongTT;
+            thanhToan.MaPhanHoiCongTT = ketQua.MaPhanHoiCongTT;
             thanhToan.TrangThai = TrangThaiThanhToan.ThatBai;
             thanhToan.MuaDichVu.TrangThai =
                 TrangThaiThanhToan.ThatBai;
@@ -218,20 +217,31 @@ public class ThanhToanService : IThanhToanService
             return;
         }
 
-        thanhToan.TrangThai = TrangThaiThanhToan.ThanhCong;
-        thanhToan.NgayThanhToan =
-            ketQua.NgayThanhToan ?? DateTime.Now;
+        var luotDang = thanhToan.MuaDichVu.DichVu.LuotDang;
+        var luotDay = thanhToan.MuaDichVu.DichVu.LuotDay;
 
-        thanhToan.MuaDichVu.KichHoat();
+        await _uow.ExecuteInTransactionAsync(async () =>
+        {
+            thanhToan.MaGiaoDichCongTT = ketQua.MaGiaoDichCongTT;
+            thanhToan.MaPhanHoiCongTT = ketQua.MaPhanHoiCongTT;
+            thanhToan.TrangThai = TrangThaiThanhToan.ThanhCong;
+            thanhToan.NgayThanhToan = ketQua.NgayThanhToan ?? DateTime.Now;
+            thanhToan.MuaDichVu.KichHoat();
 
-        // Lưu kết quả thanh toán và kích hoạt dịch vụ trước khi gửi thông báo.
-        await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync();
+            await _uow.NguoiDungs.CongLuotAsync(
+                thanhToan.MuaDichVu.IdNguoiDung,
+                luotDang,
+                luotDay);
+            return true;
+        });
 
         await _thongBaoService.TaoAsync(
             thanhToan.MuaDichVu.IdNguoiDung,
             "Thanh toán thành công",
             $"Bạn đã thanh toán thành công dịch vụ " +
             $"{thanhToan.MuaDichVu.DichVu.TenDichVu} " +
-            $"với số tiền {thanhToan.TongTien:N0} VNĐ.");
+            $"với số tiền {thanhToan.TongTien:N0} VNĐ. " +
+            $"Tài khoản được cộng {luotDang} lượt đăng và {luotDay} lượt đẩy.");
     }
 }

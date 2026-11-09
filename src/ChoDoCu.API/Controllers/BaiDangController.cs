@@ -72,6 +72,27 @@ public class BaiDangController : ControllerBase
         return Ok(ketQua);
     }
 
+    [HasPermission(AppPermissions.BaiDangDuyet)]
+    [HttpGet("quan-tri")]
+    public async Task<IActionResult> DanhSachQuanTri(
+        [FromQuery] TrangThaiBaiDang? trangThai,
+        [FromQuery] string? keyword,
+        [FromQuery] int? idDanhMuc,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var ketQua = await _baiDangService.DanhSachQuanTriAsync(
+            trangThai, keyword, idDanhMuc, page, pageSize);
+        return Ok(ketQua);
+    }
+
+    [HasPermission(AppPermissions.BaiDangDuyet)]
+    [HttpGet("quan-tri/thong-ke")]
+    public async Task<IActionResult> ThongKeQuanTri()
+    {
+        return Ok(await _baiDangService.ThongKeQuanTriAsync());
+    }
+
     [Authorize]
     [HttpGet("cua-toi")]
     public async Task<IActionResult> DanhSachCuaToi(

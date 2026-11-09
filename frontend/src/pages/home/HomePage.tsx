@@ -119,12 +119,22 @@ export default function HomePage() {
           <ErrorBox message={latest.error} onRetry={latest.reload} />
         ) : !latest.data || latest.data.items.length === 0 ? (
           <Empty title="Chưa có tin nào được duyệt">
-            Hãy <Link to="/dang-bai">đăng tin đầu tiên</Link>. Tin hiện sau khi quản trị viên duyệt.
+            Hãy <Link to="/dang-tin">đăng tin đầu tiên</Link>. Tin hiện sau khi quản trị viên duyệt.
           </Empty>
         ) : (
           <div className="grid-posts">
             {latest.data.items.map((p) => (
-              <PostCard key={p.id} id={p.id} tieuDe={p.tieuDe} giaTien={p.giaTien} anh={p.anhs[0]} noiTrongTin={p.tenThanhPho} ngay={p.ngayDang} />
+              <PostCard
+                key={p.id}
+                id={p.id}
+                tieuDe={p.tieuDe}
+                giaTien={p.giaTien}
+                anh={p.anhBia ?? p.anhs[0]}
+                noiTrongTin={p.tenThanhPho}
+                ngay={p.ngayDang}
+                laTinUuTien={p.laTinUuTien}
+                ngayDayTin={p.ngayDayTin}
+              />
             ))}
           </div>
         )}

@@ -40,6 +40,13 @@ public class NguoiDungRepository : INguoiDungRepository
             .Where(x => x.Id == idNguoiDung)
             .ExecuteUpdateAsync(updates => updates.SetProperty(x => x.LuotDang, x => x.LuotDang + 1));
 
+    public Task<int> CongLuotAsync(int idNguoiDung, int luotDang, int luotDay) =>
+        _context.Users
+            .Where(x => x.Id == idNguoiDung)
+            .ExecuteUpdateAsync(updates => updates
+                .SetProperty(x => x.LuotDang, x => x.LuotDang + luotDang)
+                .SetProperty(x => x.LuotDay, x => x.LuotDay + luotDay));
+
     public void Update(NguoiDung nguoiDung)
     {
         _context.Users.Update(nguoiDung);

@@ -34,6 +34,9 @@ public interface IBaiDangService
         int pageSize);
     Task<PagedResult<BaiDangChoDuyetResponse>> DanhSachChoDuyetAsync(
         string? keyword, int? idDanhMuc, int page, int pageSize);
+    Task<PagedResult<BaiDangQuanTriResponse>> DanhSachQuanTriAsync(
+        TrangThaiBaiDang? trangThai, string? keyword, int? idDanhMuc, int page, int pageSize);
+    Task<ThongKeBaiDangQuanTriResponse> ThongKeQuanTriAsync();
     Task<ThongKeBaiDangResponse> ThongKeCuaToiAsync(int idNguoiDung);
     Task DayTinAsync(int id, int idNguoiDung);
     Task GiaHanAsync(int id, int idNguoiDung);

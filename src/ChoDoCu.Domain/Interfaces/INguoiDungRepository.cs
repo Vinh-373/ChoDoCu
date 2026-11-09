@@ -10,6 +10,7 @@ public interface INguoiDungRepository
     Task<bool> TryTruLuotDangAsync(int idNguoiDung);
     Task<bool> TryTruLuotDayAsync(int idNguoiDung);
     Task<int> CongLuotDangAsync(int idNguoiDung);
+    Task<int> CongLuotAsync(int idNguoiDung, int luotDang, int luotDay);
     void Update(NguoiDung nguoiDung);
     void Remove(NguoiDung nguoiDung);
 

@@ -98,7 +98,7 @@ export default function ServiceCheckoutPage() {
               <div className="checkout-service-info">
                 <span className="checkout-service-label">GÓI DỊCH VỤ</span>
                 <h3>{service.tenDichVu}</h3>
-                <p>Ưu tiên hiển thị tin đăng trong {service.thoiGianDichVu} ngày</p>
+                <p>+{service.luotDang} lượt đăng tin · +{service.luotDay} lượt đẩy tin</p>
               </div>
               <strong className="checkout-service-price">{formatPrice(service.gia)}</strong>
             </div>
@@ -158,6 +158,8 @@ export default function ServiceCheckoutPage() {
         <aside className="checkout-summary">
           <h2>Tóm tắt đơn hàng</h2>
           <div className="checkout-summary-product"><span>{service.tenDichVu}</span><strong>{formatPrice(service.gia)}</strong></div>
+          <div className="checkout-summary-row"><span>Lượt đăng tin</span><span>+{service.luotDang} lượt</span></div>
+          <div className="checkout-summary-row"><span>Lượt đẩy tin</span><span>+{service.luotDay} lượt</span></div>
           <div className="checkout-summary-row"><span>Thời hạn</span><span>{service.thoiGianDichVu} ngày</span></div>
           <div className="checkout-summary-row"><span>Phí thanh toán</span><strong>Miễn phí</strong></div>
           <div className="checkout-summary-total"><span>Tổng thanh toán</span><strong>{formatPrice(service.gia)}</strong></div>

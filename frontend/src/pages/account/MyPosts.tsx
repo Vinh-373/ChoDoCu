@@ -1,216 +1,288 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { baiDangApi } from "../../api/baiDang";
+import { danhMucApi } from "../../api/danhMuc";
+import ConfirmDialog from "../../components/account/ConfirmDialog";
 import MyPostItem from "../../components/account/MyPostItem";
+import PostFilters, { type PostSort } from "../../components/account/PostFilters";
+import PostStatusTabs, { type PostTabKey } from "../../components/account/PostStatusTabs";
 import MaterialIcon from "../../components/common/MaterialIcon";
 import Pagination from "../../components/common/Pagination";
 import { Empty, ErrorBox, Spinner } from "../../components/common/State";
-import { useToast } from "../../contexts/ToastContext";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import usePostActions, { type PostAction } from "../../hooks/usePostActions";
 import { useFetch } from "../../hooks/useFetch";
-import type { TrangThaiBaiDang } from "../../types";
+import useQuota from "../../hooks/useQuota";
+import type { BaiDangCuaToiResponse, DanhMuc, PagedResult, ThongKeBaiDangResponse, TrangThaiBaiDang } from "../../types";
 import { getErrorMessage } from "../../utils/error";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
+const STATUSES: TrangThaiBaiDang[] = ["DaDuyet", "ChoDuyet", "DaAn", "BiTuChoi", "DaBan"];
+const SORTS: PostSort[] = ["moiNhat", "cuNhat", "giaTang", "giaGiam", "xemNhieu"];
+const CONFIRM_ACTIONS: Partial<Record<PostAction, { title: string; message: string; confirmLabel: string }>> = {
+  an: { title: "Ẩn tin đăng?", message: "Tin sẽ không còn hiển thị với người mua.", confirmLabel: "Ẩn tin" },
+  daBan: { title: "Đánh dấu đã bán?", message: "Tin sẽ chuyển sang trạng thái đã bán.", confirmLabel: "Đánh dấu đã bán" },
+  huyDang: { title: "Hủy đăng tin?", message: "Bạn có chắc muốn hủy tin đang chờ duyệt?", confirmLabel: "Hủy đăng" },
+  xoa: { title: "Xóa tin đăng?", message: "Tin sẽ được xóa khỏi danh sách quản lý.", confirmLabel: "Xóa tin" },
+};
 
-type TabKey = "all" | TrangThaiBaiDang;
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all", label: "Tất cả" },
-  { key: "DaDuyet", label: "Đang hiển thị" },
-  { key: "ChoDuyet", label: "Chờ duyệt" },
-  { key: "TuChoi", label: "Cần chỉnh sửa" },
-  { key: "DaAn", label: "Đã ẩn" },
-];
+function getTab(value: string | null): PostTabKey {
+  return value && STATUSES.includes(value as TrangThaiBaiDang) ? value as TrangThaiBaiDang : "all";
+}
 
-/** Quản lý tin đăng của tôi (/tin-cua-toi): thống kê, tab theo trạng thái, tìm kiếm, ẩn/hiện tin. */
-export default function MyPosts() {
-  useDocumentTitle("Tin đăng của tôi");
-  const toast = useToast();
-  const { data, loading, error, reload } = useFetch(() => baiDangApi.cuaToi(1, 100), []);
-  const [tab, setTab] = useState<TabKey>("all");
-  const [keyword, setKeyword] = useState("");
-  const [newestFirst, setNewestFirst] = useState(true);
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [busyIds, setBusyIds] = useState<Set<number>>(new Set());
+function getSort(value: string | null): PostSort {
+  return value && SORTS.includes(value as PostSort) ? value as PostSort : "moiNhat";
+}
 
-  const posts = useMemo(() => data?.items ?? [], [data]);
-  const count = (s: TabKey) => (s === "all" ? posts.length : posts.filter((p) => p.trangThai === s).length);
-
-  const filtered = useMemo(() => {
-    const kw = keyword.trim().toLowerCase();
-    return posts
-      .filter((p) => (tab === "all" || p.trangThai === tab) && (!kw || p.tieuDe.toLowerCase().includes(kw)))
-      .sort((a, b) => (newestFirst ? 1 : -1) * (new Date(b.ngayDang).getTime() - new Date(a.ngayDang).getTime()));
-  }, [posts, tab, keyword, newestFirst]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const current = Math.min(page, totalPages);
-  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
-
-  const mark = (ids: number[], on: boolean) => setBusyIds((cur) => new Set([...cur].filter((x) => !ids.includes(x)).concat(on ? ids : [])));
-
-  const toggleHidden = async (id: number, hidden: boolean) => {
-    mark([id], true);
-    try {
-      await (hidden ? baiDangApi.hien(id) : baiDangApi.an(id));
-      toast(hidden ? "Đã hiện lại tin." : "Đã ẩn tin.", "ok");
-      reload();
-    } catch (err) {
-      toast(getErrorMessage(err, "Chưa thực hiện được. Vui lòng thử lại."), "error");
-    } finally {
-      mark([id], false);
+function categoryLabels(tree: DanhMuc[]): Map<string, string> {
+  const labels = new Map<string, string>();
+  const visit = (categories: DanhMuc[], parent = "") => {
+    for (const category of categories) {
+      const label = parent ? `${parent} > ${category.tenDanhMuc}` : category.tenDanhMuc;
+      labels.set(category.tenDanhMuc.trim().toLocaleLowerCase(), label);
+      visit(category.danhMucCons ?? [], label);
     }
   };
+  visit(tree);
+  return labels;
+}
 
-  const hideSelected = async () => {
-    const ids = posts.filter((p) => selected.has(p.id) && p.trangThai === "DaDuyet").map((p) => p.id);
-    if (ids.length === 0) return toast("Chỉ ẩn được các tin đang hiển thị.", "info");
-    mark(ids, true);
-    const results = await Promise.allSettled(ids.map((id) => baiDangApi.an(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    mark(ids, false);
-    setSelected(new Set());
-    toast(failed ? `Đã ẩn ${ids.length - failed}/${ids.length} tin, ${failed} tin lỗi.` : `Đã ẩn ${ids.length} tin.`, failed ? "error" : "ok");
+function actionPrompt(action: PostAction, luotDang: number, luotDay: number, quotaKnown: boolean) {
+  if (action === "dayTin") {
+    return {
+      title: "Đẩy tin VIP?",
+      message: quotaKnown ? `Dùng 1 lượt đẩy, bạn còn ${Math.max(0, luotDay - 1)} lượt.` : "Dùng 1 lượt đẩy tin.",
+      confirmLabel: "Đẩy tin VIP",
+    };
+  }
+  if (action === "giaHan") {
+    return {
+      title: "Gia hạn tin đăng?",
+      message: quotaKnown
+        ? `Dùng 1 lượt đăng, gia hạn thêm 30 ngày. Bạn còn ${Math.max(0, luotDang - 1)} lượt đăng.`
+        : "Dùng 1 lượt đăng, gia hạn thêm 30 ngày.",
+      confirmLabel: "Gia hạn",
+    };
+  }
+  return CONFIRM_ACTIONS[action];
+}
+
+export default function MyPosts() {
+  useDocumentTitle("Tin đăng của tôi");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [keyword, setKeyword] = useState(searchParams.get("keyword") ?? "");
+  const [result, setResult] = useState<PagedResult<BaiDangCuaToiResponse> | null>(null);
+  const [stats, setStats] = useState<ThongKeBaiDangResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [confirming, setConfirming] = useState<{ post: BaiDangCuaToiResponse; action: PostAction } | null>(null);
+  const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
+  const categories = useFetch(() => danhMucApi.layCay(), []);
+  const quota = useQuota();
+
+  const tab = getTab(searchParams.get("trangThai"));
+  const sort = getSort(searchParams.get("sapXep"));
+  const categoryIdValue = Number(searchParams.get("idDanhMuc"));
+  const categoryId = Number.isInteger(categoryIdValue) && categoryIdValue > 0 ? categoryIdValue : undefined;
+  const pageValue = Number(searchParams.get("page"));
+  const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+  const queryKeyword = searchParams.get("keyword") ?? "";
+  const lastQueryKeyword = useRef(queryKeyword);
+
+  const updateQuery = useCallback((updates: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams);
+    for (const [key, value] of Object.entries(updates)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (queryKeyword !== lastQueryKeyword.current) {
+      lastQueryKeyword.current = queryKeyword;
+      setKeyword(queryKeyword);
+    }
+  }, [queryKeyword]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (keyword !== queryKeyword) updateQuery({ keyword: keyword.trim() || undefined, page: undefined });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [keyword, queryKeyword, updateQuery]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      baiDangApi.cuaToi({
+        ...(tab !== "all" ? { trangThai: tab } : {}),
+        ...(queryKeyword.trim() ? { keyword: queryKeyword.trim() } : {}),
+        ...(categoryId ? { idDanhMuc: categoryId } : {}),
+        sapXep: sort,
+        page,
+        pageSize: PAGE_SIZE,
+      }),
+      baiDangApi.thongKeCuaToi(),
+    ]).then(([list, summary]) => {
+      if (!active) return;
+      setResult(list);
+      setStats(summary);
+      setLoading(false);
+    }).catch((reason: unknown) => {
+      if (!active) return;
+      setError(getErrorMessage(reason, "Không tải được tin đăng. Vui lòng thử lại."));
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [tab, queryKeyword, categoryId, sort, page, refreshKey]);
+
+  const reload = useCallback(() => setRefreshKey((value) => value + 1), []);
+  const refreshAfterAction = useCallback(() => {
     reload();
+    quota.reload();
+  }, [quota.reload, reload]);
+  const { busyIds, perform } = usePostActions({ onSuccess: refreshAfterAction });
+  const counts = useMemo(() => {
+    const countByStatus = new Map((stats?.theoTrangThai ?? []).map((item) => [item.trangThai, item.soLuong]));
+    return {
+      all: stats?.tongSo ?? 0,
+      DaDuyet: countByStatus.get("DaDuyet") ?? 0,
+      ChoDuyet: countByStatus.get("ChoDuyet") ?? 0,
+      DaAn: countByStatus.get("DaAn") ?? 0,
+      BiTuChoi: countByStatus.get("BiTuChoi") ?? 0,
+      DaBan: countByStatus.get("DaBan") ?? 0,
+    };
+  }, [stats]);
+  const labels = useMemo(() => categoryLabels(categories.data ?? []), [categories.data]);
+  const posts = result?.items ?? [];
+  const totalPages = Math.max(1, result?.totalPages ?? 1);
+  const firstItem = result && result.totalCount > 0 ? (result.page - 1) * PAGE_SIZE + 1 : 0;
+  const lastItem = result ? Math.min((result.page - 1) * PAGE_SIZE + posts.length, result.totalCount) : 0;
+
+  const handleAction = (post: BaiDangCuaToiResponse, action: PostAction) => {
+    if (action === "dayTin" && !quota.loading && !quota.error && quota.luotDay === 0) {
+      setQuotaDialogOpen(true);
+    } else if (actionPrompt(action, quota.luotDang, quota.luotDay, !quota.loading && !quota.error)) setConfirming({ post, action });
+    else void perform(action, post.id);
   };
 
-  const pick = (id: number, on: boolean) =>
-    setSelected((cur) => {
-      const next = new Set(cur);
-      if (on) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+  const confirmAction = async () => {
+    if (!confirming) return;
+    const succeeded = await perform(confirming.action, confirming.post.id);
+    if (succeeded !== undefined) setConfirming(null);
+  };
 
-  const stats = [
-    { label: "Tổng tin đăng", value: count("all"), icon: "list_alt", note: "Tất cả mục" },
-    { label: "Đang hiển thị", value: count("DaDuyet"), icon: "check_circle", note: "Đang tiếp cận khách", accent: "text-secondary" },
-    { label: "Đang chờ duyệt", value: count("ChoDuyet"), icon: "schedule", note: "Chờ kiểm duyệt", accent: "text-tertiary" },
-    { label: "Cần chỉnh sửa", value: count("TuChoi"), icon: "report", note: "Chưa được duyệt", accent: "text-error" },
+  const selectTab = (nextTab: PostTabKey) => {
+    updateQuery({ trangThai: nextTab === "all" ? undefined : nextTab, page: undefined });
+  };
+  const selectCategory = (value: number | undefined) => updateQuery({ idDanhMuc: value?.toString(), page: undefined });
+  const selectSort = (value: PostSort) => updateQuery({ sapXep: value === "moiNhat" ? undefined : value, page: undefined });
+
+  const cards = [
+    { label: "Tổng tin đăng", value: counts.all, icon: "list_alt", note: "Tất cả mục" },
+    { label: "Đang hiển thị", value: counts.DaDuyet, icon: "check_circle", note: "Đang tiếp cận khách", accent: "text-secondary" },
+    { label: "Đang chờ duyệt", value: counts.ChoDuyet, icon: "schedule", note: "Chờ kiểm duyệt", accent: "text-tertiary" },
+    { label: "Bị từ chối", value: counts.BiTuChoi, icon: "report", note: "Lý do từ chối", accent: "text-error" },
   ];
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col gap-space-lg pb-space-xl">
       <div className="flex items-center justify-between gap-space-md">
-        <h1 className="m-0 font-headline-1 text-headline-1 text-on-surface">Tin đăng của tôi</h1>
-        <Link
-          to="/dang-bai"
-          className="inline-flex items-center gap-space-xs h-10 px-space-lg rounded-xl bg-primary-container hover:bg-primary text-on-primary no-underline hover:no-underline font-button-text text-button-text shadow-md transition-colors"
-        >
+        <div>
+          <h1 className="m-0 font-headline-1 text-headline-1 text-on-surface">Tin đăng của tôi</h1>
+          <p className="mb-0 mt-space-xs font-caption text-caption text-on-surface-variant">
+            {quota.loading ? "Đang tải lượt sử dụng…" : `Còn ${quota.luotDang} lượt đăng · ${quota.luotDay} lượt đẩy`}
+            {" · "}
+            <Link to="/dich-vu" className="font-caption-bold text-caption-bold text-primary underline">Mua thêm lượt</Link>
+          </p>
+          {quota.error && <p className="mb-0 mt-space-2xs font-caption text-caption text-error" role="alert">{quota.error}</p>}
+        </div>
+        <Link to="/dang-tin" className="inline-flex items-center gap-space-xs h-10 px-space-lg rounded-xl bg-primary-container hover:bg-primary text-on-primary no-underline hover:no-underline font-button-text text-button-text shadow-md transition-colors">
           <MaterialIcon name="add_circle" size={18} /> Đăng tin mới
         </Link>
       </div>
 
-      {loading ? (
-        <Spinner />
-      ) : error ? (
-        <ErrorBox message={error} onRetry={reload} />
-      ) : (
+      {loading ? <Spinner /> : error ? <ErrorBox message={error} onRetry={reload} /> : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
-            {stats.map((s) => (
-              <div key={s.label} className="bg-surface-container-lowest rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-space-md flex flex-col gap-space-2xs">
+            {cards.map((card) => (
+              <div key={card.label} className="bg-surface-container-lowest rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-space-md flex flex-col gap-space-2xs">
                 <div className="flex items-center justify-between font-caption text-caption text-on-surface-variant">
-                  <span>{s.label}</span>
-                  <MaterialIcon name={s.icon} size={18} className={s.accent} />
+                  <span>{card.label}</span><MaterialIcon name={card.icon} size={18} className={card.accent} />
                 </div>
-                <strong className="font-headline-1 text-headline-1 text-on-surface">{s.value}</strong>
-                <span className="font-caption text-caption text-on-surface-variant">{s.note}</span>
+                <strong className="font-headline-1 text-headline-1 text-on-surface">{card.value}</strong>
+                <span className="font-caption text-caption text-on-surface-variant">{card.note}</span>
               </div>
             ))}
           </div>
 
           <div className="bg-surface-container-lowest rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-space-md flex flex-col gap-space-md">
-            <div role="tablist" aria-label="Lọc theo trạng thái" className="flex gap-space-lg overflow-x-auto border-b border-surface-variant">
-              {TABS.map((t) => {
-                const active = t.key === tab;
-                return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => {
-                      setTab(t.key);
-                      setPage(1);
-                    }}
-                    className={`shrink-0 -mb-px pb-space-sm px-0 bg-transparent border-0 border-b-2 cursor-pointer inline-flex items-center gap-space-xs font-button-text text-button-text ${
-                      active ? "border-primary-container text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
-                    }`}
-                  >
-                    {t.label}
-                    <span className={`px-space-xs rounded-full font-caption-bold text-caption-bold ${active ? "bg-primary-fixed text-primary" : "bg-surface-container-high"}`}>{count(t.key)}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-space-sm">
-              <div className="relative flex-1 min-w-48 flex items-center">
-                <MaterialIcon name="search" size={18} className="absolute left-space-md text-on-surface-variant pointer-events-none" />
-                <input
-                  type="search"
-                  value={keyword}
-                  onChange={(e) => {
-                    setKeyword(e.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="Tìm kiếm theo tiêu đề tin"
-                  aria-label="Tìm trong tin của tôi"
-                  className="w-full h-10 pl-10 pr-space-md bg-surface-container-low rounded-xl border-0 font-body-2 text-body-2 focus:outline-none focus:shadow-[0_0_0_2px_#ff7a00]"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setNewestFirst((v) => !v)}
-                className="h-10 px-space-md rounded-xl border-0 cursor-pointer bg-surface-container-low hover:bg-surface-container font-button-text text-button-text text-on-surface inline-flex items-center gap-space-xs"
-              >
-                <MaterialIcon name="swap_vert" size={18} /> {newestFirst ? "Mới nhất" : "Cũ nhất"}
-              </button>
-              <button
-                type="button"
-                disabled={selected.size === 0}
-                onClick={() => void hideSelected()}
-                className="h-10 px-space-md rounded-xl border-0 cursor-pointer bg-surface-container-high hover:bg-surface-variant font-button-text text-button-text text-on-surface inline-flex items-center gap-space-xs disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <MaterialIcon name="visibility_off" size={18} /> Ẩn tin đã chọn{selected.size > 0 ? ` (${selected.size})` : ""}
-              </button>
-            </div>
+            <PostStatusTabs value={tab} counts={counts} onChange={selectTab} />
+            <PostFilters
+              keyword={keyword}
+              categoryId={categoryId}
+              sort={sort}
+              categories={categories.data ?? []}
+              categoryError={categories.error}
+              onKeywordChange={setKeyword}
+              onCategoryChange={selectCategory}
+              onSortChange={selectSort}
+            />
           </div>
 
-          {rows.length === 0 ? (
-            posts.length === 0 ? (
-              <Empty title="Bạn chưa có tin đăng nào">
-                <Link to="/dang-bai">Đăng tin đầu tiên</Link> để bắt đầu bán đồ cũ.
-              </Empty>
-            ) : (
-              <Empty title="Không có tin nào khớp bộ lọc">Thử đổi trạng thái hoặc từ khóa tìm kiếm.</Empty>
-            )
+          {posts.length === 0 ? (
+            <Empty title={queryKeyword || categoryId || tab !== "all" ? "Không có tin nào khớp bộ lọc" : "Bạn chưa có tin đăng nào"}>
+              {queryKeyword || categoryId || tab !== "all" ? "Thử đổi trạng thái, danh mục hoặc từ khóa tìm kiếm." : <><Link to="/dang-tin">Đăng tin đầu tiên</Link> để bắt đầu bán đồ cũ.</>}
+            </Empty>
           ) : (
             <div className="flex flex-col gap-space-md">
-              {rows.map((p) => (
+              {posts.map((post) => (
                 <MyPostItem
-                  key={p.id}
-                  post={p}
-                  selected={selected.has(p.id)}
-                  busy={busyIds.has(p.id)}
-                  onSelect={(on) => pick(p.id, on)}
-                  onToggleHidden={() => void toggleHidden(p.id, p.trangThai === "DaAn")}
+                  key={post.id}
+                  post={post}
+                  categoryLabel={labels.get(post.tenDanhMuc.trim().toLocaleLowerCase()) ?? post.tenDanhMuc}
+                  busy={busyIds.has(post.id)}
+                  onAction={(action) => handleAction(post, action)}
                 />
               ))}
             </div>
           )}
 
-          {filtered.length > 0 && (
+          {result && result.totalCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-space-md font-caption text-caption text-on-surface-variant">
               <span>
-                Hiển thị {(current - 1) * PAGE_SIZE + 1} - {(current - 1) * PAGE_SIZE + rows.length} trong tổng số {filtered.length} tin đăng
+                Hiển thị {firstItem} - {lastItem} trong tổng số {result.totalCount} tin đăng
               </span>
-              <Pagination page={current} totalPages={totalPages} onChange={setPage} />
+              <Pagination page={Math.min(page, totalPages)} totalPages={totalPages} onChange={(nextPage) => updateQuery({ page: nextPage === 1 ? undefined : String(nextPage) })} />
             </div>
           )}
         </>
+      )}
+
+      {confirming && (() => {
+        const prompt = actionPrompt(confirming.action, quota.luotDang, quota.luotDay, !quota.loading && !quota.error);
+        if (!prompt) return null;
+        return (
+          <ConfirmDialog
+            {...prompt}
+            busy={busyIds.has(confirming.post.id)}
+            onCancel={() => setConfirming(null)}
+            onConfirm={() => void confirmAction()}
+          />
+        );
+      })()}
+      {quotaDialogOpen && (
+        <ConfirmDialog
+          title="Bạn đã hết lượt đẩy tin"
+          message="Mua thêm lượt đẩy để tiếp tục đẩy tin VIP."
+          confirmLabel="Đến dịch vụ"
+          linkTo="/dich-vu"
+          onCancel={() => setQuotaDialogOpen(false)}
+        />
       )}
     </div>
   );

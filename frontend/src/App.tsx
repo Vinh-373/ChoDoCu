@@ -8,6 +8,7 @@ import AdminApprove from "./pages/admin/AdminApprove";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminHome from "./pages/admin/AdminHome";
+import AdminPostReview from "./pages/admin/AdminPostReview";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminServiceCreate from "./pages/admin/AdminServiceCreate";
@@ -21,8 +22,9 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ChatPage from "./pages/chat/ChatPage";
 import HomePage from "./pages/home/HomePage";
 import NotFound from "./pages/NotFound";
-import PostCreate from "./pages/post/PostCreate";
-import PostDetail from "./pages/post/PostDetail";
+import PostCreatePage from "./pages/post/PostCreatePage";
+import PostDetailPage from "./pages/post/PostDetailPage";
+import PostEditPage from "./pages/post/PostEditPage";
 import PostSearch from "./pages/post/PostSearch";
 import ServicesPage from "./pages/service/ServicesPage";
 import PaymentResultPage from "./pages/service/PaymentResultPage";
@@ -47,7 +49,7 @@ export default function App() {
           {/* Công khai */}
           <Route index element={<HomePage />} />
           <Route path="tim-kiem" element={<PostSearch />} />
-          <Route path="bai-dang/:id" element={<PostDetail />} />
+          <Route path="bai-dang/:id" element={<PostDetailPage />} />
           <Route path="dich-vu" element={<ServicesPage />} />
           <Route path="payment/result" element={<PaymentResultPage />} />
 
@@ -57,7 +59,9 @@ export default function App() {
             <Route path="tai-khoan/quan-ly-tin" element={<MyPosts />} />
             <Route path="tai-khoan/doi-mat-khau" element={<ChangePassword />} />
             <Route path="dich-vu/thanh-toan/:id" element={<ServiceCheckoutPage />} />
-            <Route path="dang-bai" element={<PostCreate />} />
+            <Route path="bai-dang/:id/sua" element={<PostEditPage />} />
+            <Route path="dang-tin" element={<PostCreatePage />} />
+            <Route path="dang-bai" element={<PostCreatePage />} />
             <Route path="tai-khoan/yeu-thich" element={<Favorites />} />
             <Route path="thong-bao" element={<Notifications />} />
             <Route path="tin-nhan" element={<ChatPage />} />
@@ -72,6 +76,7 @@ export default function App() {
           <Route path="quan-tri" element={<AdminLayout />}>
             <Route index element={<AdminHome />} />
             <Route path="duyet-bai" element={<AdminApprove />} />
+            <Route path="bai-dang/:id" element={<AdminPostReview />} />
             <Route element={<ProtectedRoute roles={["Admin"]} />}>
               <Route path="thanh-toan" element={<AdminPayments />} />
               <Route path="thanh-toan/:id" element={<AdminPaymentDetail />} />

@@ -199,33 +199,57 @@ public static class DbSeeder
         }
 
         await SeedThuocTinhOtoAsync(context);
+        await SeedThuocTinhDanhMucKhacAsync(context);
 
         // 6. Seed dịch vụ
+        var dichVuSeeds = new[]
+        {
+            new DichVu
+            {
+                TenDichVu = "Đẩy tin 1 lần",
+                Gia = 10000,
+                ThoiGianDichVu = 1,
+                LuotDang = 0,
+                LuotDay = 1,
+                TrangThai = "HoatDong"
+            },
+            new DichVu
+            {
+                TenDichVu = "Gói đẩy tin 7 ngày",
+                Gia = 50000,
+                ThoiGianDichVu = 7,
+                LuotDang = 5,
+                LuotDay = 7,
+                TrangThai = "HoatDong"
+            },
+            new DichVu
+            {
+                TenDichVu = "Gói tin VIP 30 ngày",
+                Gia = 200000,
+                ThoiGianDichVu = 30,
+                LuotDang = 30,
+                LuotDay = 30,
+                TrangThai = "HoatDong"
+            }
+        };
+
         if (!await context.DichVus.AnyAsync())
         {
-            context.DichVus.AddRange(
-                new DichVu
-                {
-                    TenDichVu = "Đẩy tin 1 lần",
-                    Gia = 10000,
-                    ThoiGianDichVu = 1,
-                    TrangThai = "HoatDong"
-                },
-                new DichVu
-                {
-                    TenDichVu = "Gói đẩy tin 7 ngày",
-                    Gia = 50000,
-                    ThoiGianDichVu = 7,
-                    TrangThai = "HoatDong"
-                },
-                new DichVu
-                {
-                    TenDichVu = "Gói tin VIP 30 ngày",
-                    Gia = 200000,
-                    ThoiGianDichVu = 30,
-                    TrangThai = "HoatDong"
-                }
-            );
+            context.DichVus.AddRange(dichVuSeeds);
+        }
+        else
+        {
+            var dichVuNames = dichVuSeeds.Select(x => x.TenDichVu).ToArray();
+            var unconfiguredPackages = await context.DichVus
+                .Where(x => dichVuNames.Contains(x.TenDichVu) && x.LuotDang == 0 && x.LuotDay == 0)
+                .ToListAsync();
+
+            foreach (var package in unconfiguredPackages)
+            {
+                var seed = dichVuSeeds.Single(x => x.TenDichVu == package.TenDichVu);
+                package.LuotDang = seed.LuotDang;
+                package.LuotDay = seed.LuotDay;
+            }
         }
 
         // 7. Seed phương thức thanh toán
@@ -279,6 +303,8 @@ public static class DbSeeder
                 GioiTinh = "Khác",
                 NgaySinh = new DateTime(1990, 1, 1),
                 TrangThai = TrangThaiNguoiDung.HoatDong,
+                LuotDang = 20,
+                LuotDay = 5,
                 NgayTao = DateTime.Now
             };
 
@@ -431,11 +457,6 @@ public static class DbSeeder
 
         context.Set<BaiDang>().AddRange(baiDangs);
 
-        // Cập nhật số lượt đăng của người bán (các entity user đang được context theo dõi)
-        var nguoiBans = new[] { nguoiBan1, nguoiBan2, nguoiBan3 };
-        foreach (var g in baiDangs.GroupBy(b => b.IdNguoiDung))
-            nguoiBans.First(u => u.Id == g.Key).LuotDang = g.Count();
-
         await context.SaveChangesAsync();   // có Id cho từng bài đăng
 
         var bdIphone13 = baiDangs[0];
@@ -556,10 +577,13 @@ public static class DbSeeder
             IdPhuongXa = phuongXa,
             IdDichVu = idDichVu,
             TieuDe = tieuDe,
-            NoiDung = noiDung,
+            NoiDung = noiDung.Trim(),
+            MoTa = string.Empty,
+            Gia = gia,
             DiaChi = diaChi,
             DiaChiChiTiet = diaChiChiTiet,
             NgayDang = ngayDang,
+            NgayHetHan = trangThai == TrangThaiBaiDang.DaDuyet ? ngayDang.AddDays(30) : null,
             TrangThai = trangThai,
             UuTien = uuTien,
             // Gán qua navigation để EF tự điền IdSanPham khi lưu
@@ -604,6 +628,8 @@ public static class DbSeeder
                 IdThanhPho = idThanhPho,
                 IdPhuongXa = idPhuongXa,
                 TrangThai = TrangThaiNguoiDung.HoatDong,
+                LuotDang = 20,
+                LuotDay = 5,
                 NgayTao = DateTime.Now
             };
 
@@ -780,5 +806,160 @@ public static class DbSeeder
         }
 
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedThuocTinhDanhMucKhacAsync(ApplicationDbContext context)
+    {
+        var danhMucDienTu = await context.DanhMucs
+            .FirstOrDefaultAsync(x => x.IdDanhMucCha == null && x.TenDanhMuc == "Đồ điện tử");
+        if (danhMucDienTu is null)
+        {
+            danhMucDienTu = new DanhMuc { TenDanhMuc = "Đồ điện tử" };
+            context.DanhMucs.Add(danhMucDienTu);
+            await context.SaveChangesAsync();
+        }
+
+        var danhMucXeCo = await context.DanhMucs
+            .FirstOrDefaultAsync(x => x.IdDanhMucCha == null && x.TenDanhMuc == "Xe cộ");
+        if (danhMucXeCo is null)
+        {
+            danhMucXeCo = new DanhMuc { TenDanhMuc = "Xe cộ" };
+            context.DanhMucs.Add(danhMucXeCo);
+            await context.SaveChangesAsync();
+        }
+
+        var danhMucTheoTen = new Dictionary<string, DanhMuc>();
+        foreach (var (ten, danhMucCha) in new[]
+        {
+            ("Laptop", danhMucDienTu),
+            ("Điện thoại", danhMucDienTu),
+            ("Xe máy", danhMucXeCo)
+        })
+        {
+            var danhMuc = await context.DanhMucs
+                .FirstOrDefaultAsync(x => x.IdDanhMucCha == danhMucCha.Id && x.TenDanhMuc == ten);
+            if (danhMuc is null)
+            {
+                danhMuc = new DanhMuc { IdDanhMucCha = danhMucCha.Id, TenDanhMuc = ten };
+                context.DanhMucs.Add(danhMuc);
+            }
+
+            danhMucTheoTen.Add(ten, danhMuc);
+        }
+
+        await context.SaveChangesAsync();
+
+        var xeMay = danhMucTheoTen["Xe máy"];
+        var hangVaDongXeMay = new Dictionary<string, string[]>
+        {
+            ["Honda"] = ["Vision", "Air Blade", "SH", "Wave"],
+            ["Yamaha"] = ["Exciter", "Sirius", "Grande", "NVX"],
+            ["Suzuki"] = ["Raider", "Satria"]
+        };
+        var tenHangs = hangVaDongXeMay.Keys.ToArray();
+        var hangsHienCo = await context.Hangs
+            .Where(x => tenHangs.Contains(x.TenHang!))
+            .ToListAsync();
+        var hangTheoTen = hangsHienCo
+            .GroupBy(x => x.TenHang!)
+            .ToDictionary(x => x.Key, x => x.First());
+
+        foreach (var tenHang in tenHangs.Where(x => !hangTheoTen.ContainsKey(x)))
+        {
+            var hang = new Hang { TenHang = tenHang };
+            context.Hangs.Add(hang);
+            hangTheoTen.Add(tenHang, hang);
+        }
+
+        await context.SaveChangesAsync();
+
+        var hangIds = hangTheoTen.Values.Select(x => x.Id).ToArray();
+        var dongHienCo = await context.DongSanPhams
+            .Where(x => x.IdDanhMuc == xeMay.Id && hangIds.Contains(x.IdHang))
+            .ToListAsync();
+        foreach (var (tenHang, tenDongs) in hangVaDongXeMay)
+        {
+            var hang = hangTheoTen[tenHang];
+            foreach (var tenDong in tenDongs)
+            {
+                if (dongHienCo.Any(x => x.IdHang == hang.Id && x.TenDongSanPham == tenDong))
+                    continue;
+
+                var dong = new DongSanPham
+                {
+                    TenDongSanPham = tenDong,
+                    IdHang = hang.Id,
+                    IdDanhMuc = xeMay.Id
+                };
+                context.DongSanPhams.Add(dong);
+                dongHienCo.Add(dong);
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        var thuocTinhTheoDanhMuc = new Dictionary<string, (string Ten, KieuDuLieuThuocTinh KieuDuLieu, bool BatBuoc, int ThuTu, List<string> LuaChon, string? ThuocTinhCha)[]>
+        {
+            ["Laptop"] =
+            [
+                ("Hãng", KieuDuLieuThuocTinh.LuaChon, true, 1, ["Dell", "HP", "Lenovo", "Asus", "Acer", "Apple", "MSI", "Khác"], null),
+                ("CPU", KieuDuLieuThuocTinh.LuaChon, false, 2, ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9", "Apple M1", "Apple M2", "Apple M3", "Khác"], null),
+                ("RAM", KieuDuLieuThuocTinh.LuaChon, true, 3, ["4GB", "8GB", "16GB", "32GB", "64GB"], null),
+                ("Ổ cứng", KieuDuLieuThuocTinh.LuaChon, false, 4, ["128GB", "256GB", "512GB", "1TB", "2TB"], null),
+                ("Kích thước màn hình", KieuDuLieuThuocTinh.LuaChon, false, 5, ["13 inch", "14 inch", "15.6 inch", "16 inch", "17 inch"], null),
+                ("Tình trạng", KieuDuLieuThuocTinh.LuaChon, true, 6, ["Đã sử dụng", "Mới 100%"], null)
+            ],
+            ["Điện thoại"] =
+            [
+                ("Hãng", KieuDuLieuThuocTinh.LuaChon, true, 1, ["Apple", "Samsung", "Xiaomi", "OPPO", "vivo", "realme", "Khác"], null),
+                ("Dung lượng", KieuDuLieuThuocTinh.LuaChon, true, 2, ["64GB", "128GB", "256GB", "512GB", "1TB"], null),
+                ("Màu sắc", KieuDuLieuThuocTinh.LuaChon, false, 3, ["Đen", "Trắng", "Xanh", "Tím", "Vàng", "Bạc", "Khác"], null),
+                ("Tình trạng pin (%)", KieuDuLieuThuocTinh.So, false, 4, [], null),
+                ("Tình trạng", KieuDuLieuThuocTinh.LuaChon, true, 5, ["Đã sử dụng", "Mới 100%"], null)
+            ],
+            ["Xe máy"] =
+            [
+                ("Hãng xe", KieuDuLieuThuocTinh.LuaChon, true, 1, [], null),
+                ("Dòng xe", KieuDuLieuThuocTinh.LuaChon, true, 2, [], "Hãng xe"),
+                ("Năm sản xuất", KieuDuLieuThuocTinh.So, true, 3, [], null),
+                ("Số km", KieuDuLieuThuocTinh.So, true, 4, [], null),
+                ("Loại xe", KieuDuLieuThuocTinh.LuaChon, false, 5, ["Xe số", "Xe ga", "Xe côn tay", "Xe điện"], null),
+                ("Tình trạng", KieuDuLieuThuocTinh.LuaChon, true, 6, ["Đã sử dụng", "Mới 100%"], null)
+            ]
+        };
+
+        foreach (var (tenDanhMuc, thuocTinhs) in thuocTinhTheoDanhMuc)
+        {
+            var danhMuc = danhMucTheoTen[tenDanhMuc];
+            var thuocTinhsHienCo = await context.ThuocTinhSanPhams
+                .Where(x => x.IdDanhMuc == danhMuc.Id)
+                .ToListAsync();
+            var idThuocTinhChaTheoTen = thuocTinhsHienCo
+                .GroupBy(x => x.TenThuocTinh)
+                .ToDictionary(x => x.Key, x => x.First().Id);
+
+            foreach (var (ten, kieuDuLieu, batBuoc, thuTu, luaChon, tenThuocTinhCha) in thuocTinhs)
+            {
+                if (thuocTinhsHienCo.Any(x => x.TenThuocTinh == ten))
+                    continue;
+
+                var thuocTinh = new ThuocTinhSanPham
+                {
+                    IdDanhMuc = danhMuc.Id,
+                    IdThuocTinhCha = tenThuocTinhCha is not null
+                        ? idThuocTinhChaTheoTen[tenThuocTinhCha]
+                        : null,
+                    TenThuocTinh = ten,
+                    KieuDuLieu = kieuDuLieu,
+                    BatBuoc = batBuoc,
+                    ThuTu = thuTu,
+                    DanhSachGiaTriLuaChon = luaChon
+                };
+                context.ThuocTinhSanPhams.Add(thuocTinh);
+                await context.SaveChangesAsync();
+                thuocTinhsHienCo.Add(thuocTinh);
+                idThuocTinhChaTheoTen.Add(ten, thuocTinh.Id);
+            }
+        }
     }
 }

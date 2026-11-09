@@ -985,6 +985,14 @@ tr:last-child td {
   margin: 0 auto;
   padding: 24px;
 }
+.service-quota-summary {
+  justify-self: center;
+  margin: -12px 0;
+  color: #605a56;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
 .service-hero {
   position: relative;
   overflow: hidden;

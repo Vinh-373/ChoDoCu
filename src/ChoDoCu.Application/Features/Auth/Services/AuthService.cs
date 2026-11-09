@@ -2,6 +2,7 @@ using ChoDoCu.Application.Common.Interfaces;
 using ChoDoCu.Application.Common.Models;
 using ChoDoCu.Application.Features.Auth.DTOs;
 using ChoDoCu.Application.Features.Auth.Interfaces;
+using ChoDoCu.Application.Features.Post;
 using ChoDoCu.Domain.Constants;
 using ChoDoCu.Domain.Entities;
 using ChoDoCu.Domain.Enums;
@@ -11,6 +12,7 @@ using System.Collections.Concurrent;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ChoDoCu.Application.Features.Auth.Services;
 
@@ -31,6 +33,7 @@ public class AuthService : IAuthService
     private readonly IEmailService _email;
     private readonly IGoogleTokenVerifier _google;
     private readonly ILogger<AuthService> _logger;
+    private readonly BaiDangSettings _baiDangSettings;
 
     public AuthService(
         IUnitOfWork uow,
@@ -44,7 +47,8 @@ public class AuthService : IAuthService
         IValidator<DatLaiMatKhauRequest> datLaiMatKhauValidator,
         IEmailService email,
         IGoogleTokenVerifier google,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IOptions<BaiDangSettings> baiDangSettings)
     {
         _uow = uow;
         _userManager = userManager;
@@ -58,6 +62,7 @@ public class AuthService : IAuthService
         _email = email;
         _google = google;
         _logger = logger;
+        _baiDangSettings = baiDangSettings.Value;
     }
 
     public async Task<Result<AuthResponse>> DangKyAsync(DangKyRequest request)
@@ -83,6 +88,8 @@ public class AuthService : IAuthService
             NgaySinh = request.NgaySinh,
             GioiTinh = request.GioiTinh,
             TrangThai = TrangThaiNguoiDung.HoatDong,
+            LuotDang = _baiDangSettings.LuotDangMienPhi,
+            LuotDay = _baiDangSettings.LuotDayMienPhi,
             NgayTao = DateTime.Now
         };
 
@@ -167,6 +174,8 @@ public class AuthService : IAuthService
                     NgaySinh = new DateTime(1900, 1, 1), // tạm, FE hiển thị như chưa nhập
                     GioiTinh = "Chưa XĐ",       // người dùng chọn lại ở trang hồ sơ
                     TrangThai = TrangThaiNguoiDung.HoatDong,
+                    LuotDang = _baiDangSettings.LuotDangMienPhi,
+                    LuotDay = _baiDangSettings.LuotDayMienPhi,
                     NgayTao = DateTime.Now
                 };
 
